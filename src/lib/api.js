@@ -3,7 +3,6 @@ import { create } from 'zustand';
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-// ── Axios instance ─────────────────────────────────────────────────────────
 export const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use(config => {
@@ -25,13 +24,11 @@ api.interceptors.response.use(
   }
 );
 
-// ── Auth store ─────────────────────────────────────────────────────────────
 export const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('cp_user') || 'null'),
   clinic: JSON.parse(localStorage.getItem('cp_clinic') || 'null'),
   token: localStorage.getItem('cp_token') || null,
 
-  // Role helpers
   isAdmin: () => get().user?.role === 'admin',
   isDoctor: () => ['doctor', 'admin'].includes(get().user?.role),
   isReceptionist: () => get().user?.role === 'receptionist',

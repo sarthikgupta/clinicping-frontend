@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="60" fill="#1D9E75"/>
+  <!-- Cross / medical symbol -->
+  <rect x="44" y="28" width="32" height="64" rx="8" fill="white" opacity="0.15"/>
+  <rect x="28" y="44" width="64" height="32" rx="8" fill="white" opacity="0.15"/>
+  <!-- Foreground cross -->
+  <rect x="48" y="30" width="24" height="60" rx="6" fill="white"/>
+  <rect x="30" y="48" width="60" height="24" rx="6" fill="white"/>
+  <!-- Ping dot -->
+  <circle cx="88" cy="32" r="12" fill="#fff"/>
+  <circle cx="88" cy="32" r="7" fill="#1D9E75"/>
+</svg>
