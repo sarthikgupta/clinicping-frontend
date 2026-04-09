@@ -399,7 +399,7 @@ export default function Doctor() {
                   )}
 
                   <div style={S.sectionCard}>
-                    <div style={S.sectionHead}><PlusIcon /> Symptoms &amp; diagnosis</div>
+                    <div style={S.sectionHead}><PlusIcon /> Symptoms &amp; Diagnosis</div>
                     <div style={S.sectionBody}>
                       <label style={S.fieldLabel}>Symptoms</label>
                       <textarea style={{ ...S.inp, marginBottom: 10 }} rows={2} placeholder="Patient complaints..." value={symptoms} onChange={e => setSymptoms(e.target.value)} />
@@ -410,7 +410,7 @@ export default function Doctor() {
 
                   {/* ── Medicines with dose picker ── */}
                   <div style={S.sectionCard}>
-                    <div style={S.sectionHead}><PillIcon /> Medicines prescribed</div>
+                    <div style={S.sectionHead}><PillIcon /> Medicines Prescribed</div>
                     <div style={S.sectionBody}>
                       <div style={S.medHeader}>
                         <span style={{ flex: 2, ...S.colLabel }}>Medicine</span>
@@ -423,7 +423,7 @@ export default function Doctor() {
                           <input
                             ref={el => { medRefs.current[i] = el; }}
                             style={{ ...S.medInp, flex: 2 }}
-                            placeholder="Medicine name"
+                            placeholder="Medicine Name"
                             value={med.name}
                             onChange={e => updateMed(i, 'name', e.target.value)}
                             onKeyDown={e => handleMedKeyDown(e, i, 'name')}
@@ -455,7 +455,7 @@ export default function Doctor() {
                   </div>
 
                   <div style={S.sectionCard}>
-                    <div style={S.sectionHead}><FlaskIcon /> Tests ordered</div>
+                    <div style={S.sectionHead}><FlaskIcon /> Tests Ordered</div>
                     <div style={S.sectionBody}>
                       {tests.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
@@ -472,7 +472,7 @@ export default function Doctor() {
                   </div>
 
                   <div style={S.sectionCard}>
-                    <div style={S.sectionHead}><CalIcon /> Next appointment</div>
+                    <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
                       <div style={S.apptRow}>
                         <div style={{ flex: 1 }}><label style={S.fieldLabel}>Date</label><input style={S.medInp} type="date" value={apptDate} min={new Date().toISOString().split('T')[0]} onChange={e => setApptDate(e.target.value)} /></div>
