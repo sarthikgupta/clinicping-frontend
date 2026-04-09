@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClinicPing</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --green: #1D9E75;
+        --green-dark: #0F6E56;
+        --green-light: #E1F5EE;
+        --green-text: #085041;
+        --amber: #FAEEDA;
+        --amber-text: #854F0B;
+        --red-light: #FCEBEB;
+        --red-text: #A32D2D;
+        --gray-bg: #F7F7F5;
+        --gray-border: rgba(0,0,0,0.1);
+        --text: #1a1a1a;
+        --text-muted: #666;
+        --white: #fff;
+        --radius: 10px;
+        --radius-sm: 6px;
+      }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--gray-bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+      button { cursor: pointer; font-family: inherit; font-size: 14px; }
+      input, select, textarea { font-family: inherit; font-size: 14px; }
+      a { color: var(--green); text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
