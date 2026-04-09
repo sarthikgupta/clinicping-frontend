@@ -20,53 +20,216 @@ export default function Signup() {
       await signup(form);
       navigate('/queue');
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Signup failed');
+      setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Signup failed. Please try again.');
     } finally { setLoading(false); }
   }
 
   return (
     <div style={S.page}>
       <div style={S.card}>
-        <div style={S.logo}>Clinic<span style={{ color: '#1D9E75' }}>Ping</span></div>
-        <p style={S.sub}>Register your clinic — free for 3 months</p>
-        <p style={S.note}>You'll be the Admin. Add doctors and receptionists from Settings after signup.</p>
+        {/* Back to home */}
+        <button style={S.backBtn} onClick={() => navigate('/')}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 3L5 8l5 5" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Back to home
+        </button>
 
-        {error && <div style={S.error}>{error}</div>}
+        {/* Logo */}
+        <div style={S.logoRow}>
+          <LogoMark />
+          <span style={S.logoText}>Clinic<span style={{ color: '#1D9E75' }}>Ping</span></span>
+        </div>
+
+        <h1 style={S.title}>Create your clinic</h1>
+        <p style={S.sub}>Free for 3 months · No credit card needed</p>
+
+        <div style={S.infoBanner}>
+          You'll be the Admin. Add doctors and receptionists from Settings after signup.
+        </div>
+
+        {error && <div style={S.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          {[
-            { key: 'clinic_name', label: 'Clinic name', placeholder: 'e.g. Dr. Bhalla Clinic' },
-            { key: 'name', label: 'Your name (Admin)', placeholder: 'e.g. Anumeha Bhalla' },
-            { key: 'city', label: 'City', placeholder: 'e.g. Nabha, Patiala', required: false },
-            { key: 'phone', label: 'Clinic phone', placeholder: '+91 98765 43210' },
-            { key: 'email', label: 'Email', placeholder: 'admin@clinic.com', type: 'email' },
-            { key: 'password', label: 'Password', placeholder: 'Min 6 characters', type: 'password' },
-          ].map(({ key, label, placeholder, type = 'text', required = true }) => (
-            <div key={key} style={{ marginBottom: 12 }}>
-              <label style={S.label}>{label}</label>
-              <input style={S.input} type={type} placeholder={placeholder}
-                value={form[key]} onChange={set(key)} required={required} />
+          <div style={S.row2}>
+            <div style={S.field}>
+              <label style={S.label}>Clinic name *</label>
+              <input style={S.input} placeholder="Dr. Bhalla Clinic"
+                value={form.clinic_name} onChange={set('clinic_name')} required />
             </div>
-          ))}
-          <button style={S.btn} disabled={loading}>
+            <div style={S.field}>
+              <label style={S.label}>Your name *</label>
+              <input style={S.input} placeholder="Dr. Anumeha Bhalla"
+                value={form.name} onChange={set('name')} required />
+            </div>
+          </div>
+          <div style={S.row2}>
+            <div style={S.field}>
+              <label style={S.label}>City</label>
+              <input style={S.input} placeholder="Nabha"
+                value={form.city} onChange={set('city')} />
+            </div>
+            <div style={S.field}>
+              <label style={S.label}>Clinic phone *</label>
+              <input style={S.input} placeholder="9988776655"
+                value={form.phone} onChange={set('phone')} required />
+            </div>
+          </div>
+          <div style={S.field}>
+            <label style={S.label}>Email address *</label>
+            <input style={S.input} type="email" placeholder="admin@clinic.com"
+              value={form.email} onChange={set('email')} required />
+          </div>
+          <div style={S.field}>
+            <label style={S.label}>Password *</label>
+            <input style={S.input} type="password" placeholder="Min 6 characters"
+              value={form.password} onChange={set('password')} required minLength={6} />
+          </div>
+          <button style={{ ...S.btn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
             {loading ? 'Creating account...' : 'Create clinic account'}
           </button>
         </form>
-        <p style={S.footer}>Already registered? <Link to="/login">Sign in</Link></p>
+
+        <p style={S.footer}>
+          Already registered? <Link to="/login" style={S.link}>Sign in</Link>
+        </p>
       </div>
     </div>
   );
 }
 
+function LogoMark() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="#1D9E75"/>
+      <rect x="16" y="7" width="8" height="26" rx="3" fill="white"/>
+      <rect x="7" y="16" width="26" height="8" rx="3" fill="white"/>
+      <circle cx="31" cy="9" r="5" fill="white"/>
+      <circle cx="31" cy="9" r="3" fill="#1D9E75"/>
+    </svg>
+  );
+}
+
 const S = {
-  page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f7f5', padding: 20 },
-  card: { background: '#fff', borderRadius: 14, border: '1px solid rgba(0,0,0,0.08)', padding: '36px 32px', width: 420 },
-  logo: { fontSize: 24, fontWeight: 700, marginBottom: 6 },
-  sub: { color: '#888', fontSize: 14, marginBottom: 8 },
-  note: { fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '8px 12px', borderRadius: 8, marginBottom: 20, lineHeight: 1.5 },
-  error: { background: '#FCEBEB', color: '#A32D2D', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 },
-  label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 5 },
-  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, outline: 'none', fontSize: 14 },
-  btn: { width: '100%', marginTop: 16, padding: '12px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' },
-  footer: { textAlign: 'center', marginTop: 18, fontSize: 13, color: '#888' },
+  page: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#f7f7f5',
+    padding: 20,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
+  card: {
+    background: '#fff',
+    borderRadius: 16,
+    border: '1px solid rgba(0,0,0,0.08)',
+    padding: '36px 32px',
+    width: '100%',
+    maxWidth: 520,
+    boxSizing: 'border-box',
+  },
+  backBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    background: 'none',
+    border: 'none',
+    color: '#888',
+    fontSize: 13,
+    cursor: 'pointer',
+    padding: 0,
+    marginBottom: 24,
+  },
+  logoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 20,
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: 700,
+    color: '#1a1a1a',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 700,
+    color: '#1a1a1a',
+    margin: '0 0 6px',
+  },
+  sub: {
+    fontSize: 14,
+    color: '#888',
+    margin: '0 0 16px',
+  },
+  infoBanner: {
+    background: '#E1F5EE',
+    color: '#085041',
+    padding: '10px 14px',
+    borderRadius: 8,
+    fontSize: 13,
+    marginBottom: 20,
+    lineHeight: 1.5,
+  },
+  errorBox: {
+    background: '#FCEBEB',
+    color: '#A32D2D',
+    padding: '10px 14px',
+    borderRadius: 8,
+    fontSize: 13,
+    marginBottom: 16,
+    lineHeight: 1.5,
+  },
+  row2: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12,
+  },
+  field: { marginBottom: 14 },
+  label: {
+    display: 'block',
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#444',
+    marginBottom: 6,
+  },
+  input: {
+    display: 'block',
+    width: '100%',
+    padding: '11px 14px',
+    border: '1.5px solid #e8e8e5',
+    borderRadius: 8,
+    fontSize: 15,
+    color: '#1a1a1a',
+    outline: 'none',
+    background: '#fff',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+  },
+  btn: {
+    display: 'block',
+    width: '100%',
+    marginTop: 20,
+    padding: '13px',
+    background: '#1D9E75',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 10,
+    fontWeight: 700,
+    fontSize: 15,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
+    color: '#888',
+  },
+  link: {
+    color: '#1D9E75',
+    fontWeight: 600,
+    textDecoration: 'none',
+  },
 };
