@@ -265,7 +265,7 @@ export default function Queue() {
                   <span>
                     {isMultiDoctor ? `${drName}'s patients` : `Active patients`} ({tokens.length})
                   </span>
-                  <span style={{ fontSize: 11, color: '#888' }}>Auto-refreshes every 20s</span>
+                  <span style={{ fontSize: 11, color: '#888' }}>Auto-refreshes every 10s</span>
                 </div>
                 {tokens.map((token, i) => {
                   const badge = STATUS_BADGE[token.status] || STATUS_BADGE.waiting;

@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics';
 import Doctor from './pages/Doctor';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
+import './responsive.css';
 
 function PrivateRoute({ children }) {
   const token = useAuthStore(s => s.token);

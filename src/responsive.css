@@ -1,0 +1,98 @@
+/* ClinicPing — Responsive CSS */
+
+/* ── SIDEBAR: hide on mobile ── */
+@media (max-width: 768px) {
+  .cp-sidebar { display: none !important; }
+  .cp-mobile-header { display: flex !important; }
+  .cp-bottom-nav { display: flex !important; }
+  .cp-main { padding: 70px 14px 80px !important; }
+  .cp-bottom-pad { height: 70px !important; }
+}
+
+/* ── TABLET: narrower sidebar ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cp-sidebar { width: 180px !important; }
+  .cp-main { padding: 20px 16px !important; }
+}
+
+/* ── STATS GRID: responsive columns ── */
+@media (max-width: 600px) {
+  .cp-stats-row { grid-template-columns: repeat(3, 1fr) !important; }
+  .cp-stats-row .stat-hide-mobile { display: none !important; }
+}
+
+/* ── METRICS GRID ── */
+@media (max-width: 600px) {
+  .cp-metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── DOCTOR VIEW: stack on mobile ── */
+@media (max-width: 768px) {
+  .cp-doctor-layout { grid-template-columns: 1fr !important; min-height: unset !important; }
+  .cp-doctor-sidebar { display: none !important; }
+  .cp-doctor-sidebar.active { display: block !important; border-right: none !important; border-bottom: 1px solid rgba(0,0,0,0.07) !important; }
+}
+
+/* ── SETTINGS ROW2: stack on mobile ── */
+@media (max-width: 500px) {
+  .cp-row2 { grid-template-columns: 1fr !important; }
+  .cp-tpl-grid { grid-template-columns: 1fr !important; }
+  .cp-insights-grid { grid-template-columns: 1fr !important; }
+  .cp-doctor-stats { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── MODAL: full screen on mobile ── */
+@media (max-width: 500px) {
+  .cp-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 14px 14px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 85vh !important;
+  }
+  .cp-overlay {
+    align-items: flex-end !important;
+  }
+}
+
+/* ── QUEUE PAGE ── */
+@media (max-width: 600px) {
+  .cp-advance-btn { font-size: 13px !important; padding: 11px !important; }
+  .cp-today-stats { gap: 16px !important; }
+  .cp-today-strip { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+}
+
+/* ── ANALYTICS TODAY STRIP ── */
+@media (max-width: 500px) {
+  .cp-today-stats { gap: 12px !important; flex-wrap: wrap !important; }
+  .cp-today-stat { min-width: 60px !important; }
+}
+
+/* ── MED ROW: stack on mobile ── */
+@media (max-width: 600px) {
+  .cp-med-row { flex-wrap: wrap !important; }
+  .cp-med-row input { min-width: 0 !important; }
+}
+
+/* ── APPT ROW: stack on mobile ── */
+@media (max-width: 600px) {
+  .cp-appt-row { flex-direction: column !important; }
+}
+
+/* ── PATIENT ROW in doctor sidebar ── */
+@media (max-width: 768px) {
+  .cp-doctor-layout { border-radius: 12px !important; }
+}
+
+/* ── FORM FIELDS ── */
+@media (max-width: 500px) {
+  .cp-field-row2 { grid-template-columns: 1fr !important; }
+}
+
+/* Smooth transitions */
+* { -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
+input, textarea, select { font-size: 16px !important; } /* Prevents iOS zoom on focus */
