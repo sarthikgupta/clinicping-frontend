@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api, useAuthStore } from '../lib/api';
-import { onQueueUpdate, playPing } from '../lib/notify';
+import { onQueueUpdate, playPing, unlockAudio } from '../lib/notify';
 
 const STATUS_BADGE = {
   consulting: { bg: '#1D9E75', color: '#fff', label: 'Consulting' },
@@ -336,6 +336,8 @@ export default function Queue() {
           )}
         </div>
       )}
+
+      <div style={S.page} onClick={unlockAudio} onTouchStart={unlockAudio}></div>
 
       {/* Add patient modal */}
       {addOpen && (

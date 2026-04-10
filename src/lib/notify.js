@@ -45,12 +45,31 @@ const bc = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('clinicping_queue')
   : null;
 
-// ── Play ping sound ───────────────────────────────────────────────────────────
+// Add this at module level
+let _audioCtx = null;
+
+function getAudioCtx() {
+  if (!_audioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) _audioCtx = new AudioCtx();
+  }
+  return _audioCtx;
+}
+
+// Call this once on first user click — add to Queue.jsx
+export function unlockAudio() {
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume();
+  }
+}
+
 export function playPing() {
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    
     [880, 660].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
