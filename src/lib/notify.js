@@ -4,33 +4,53 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 console.log('[Notify] Config:', {
-  url: import.meta.env.VITE_SUPABASE_URL,
-  key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
+  url: SUPABASE_URL,
+  key: SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
 });
 
 let _client = null;
-
 function getClient() {
   if (!_client && SUPABASE_URL && SUPABASE_ANON_KEY) {
-    _client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      realtime: { params: { eventsPerSecond: 10 } }
-    });
+    _client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
   return _client;
 }
 
-// Same-device / same-browser tab sync
+function getClinicId() {
+  try {
+    return JSON.parse(localStorage.getItem('cp_user') || '{}')?.clinic_id || null;
+  } catch { return null; }
+}
+
+// Keep a persistent broadcast channel so it doesn't get GC'd
+let _broadcastChannel = null;
+function getBroadcastChannel() {
+  const clinicId = getClinicId();
+  if (!clinicId) return null;
+  const client = getClient();
+  if (!client) return null;
+
+  const channelName = `clinic-queue-${clinicId}`;
+  if (!_broadcastChannel) {
+    _broadcastChannel = client.channel(channelName);
+    _broadcastChannel.subscribe((status) => {
+      console.log('[Notify] Broadcast channel status:', status);
+    });
+  }
+  return _broadcastChannel;
+}
+
+// Same-device tab sync
 const bc = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('clinicping_queue')
   : null;
 
-// ── Play notification ping sound ─────────────────────────────────────────────
+// ── Play ping sound ───────────────────────────────────────────────────────────
 export function playPing() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    // Two-tone ping — more noticeable
     [880, 660].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -43,63 +63,43 @@ export function playPing() {
       osc.start(ctx.currentTime + i * 0.15);
       osc.stop(ctx.currentTime + i * 0.15 + 0.35);
     });
-  } catch (e) {
-    console.warn('[Notify] Audio ping failed:', e.message);
-  }
+  } catch (e) { console.warn('[Notify] Audio failed:', e.message); }
 }
 
-function getClinicId() {
-  try {
-    return JSON.parse(localStorage.getItem('cp_user') || '{}')?.clinic_id || null;
-  } catch {
-    return null;
-  }
-}
-
-// ── Broadcast update (doctor → receptionist) ─────────────────────────────────
+// ── Send update (called from Doctor) ─────────────────────────────────────────
 export function broadcastQueueUpdate(data) {
   const clinicId = data.clinic_id || getClinicId();
   const payload = { ...data, clinic_id: clinicId };
 
-  // 1. Same device/browser
+  // Same device
   if (bc) {
     bc.postMessage(payload);
     console.log('[Notify] BroadcastChannel sent', payload);
   }
 
-  // 2. Cross-device via Supabase Realtime
-  const client = getClient();
-  if (!client) {
-    console.warn('[Notify] Supabase not configured — check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-    return;
-  }
-  if (!clinicId) {
-    console.warn('[Notify] No clinic_id found — cannot broadcast');
+  // Cross-device — use persistent channel
+  const ch = getBroadcastChannel();
+  if (!ch) {
+    console.warn('[Notify] No broadcast channel available');
     return;
   }
 
-  const channelName = `clinic-queue-${clinicId}`;
-  const ch = client.channel(channelName);
-  ch.subscribe((status) => {
-    if (status === 'SUBSCRIBED') {
-      ch.send({
-        type: 'broadcast',
-        event: 'queue_update',
-        payload,
-      }).then(() => {
-        console.log('[Notify] Realtime broadcast sent to', channelName);
-      }).catch(e => {
-        console.warn('[Notify] Realtime send failed:', e.message);
-      });
-    }
+  ch.send({
+    type: 'broadcast',
+    event: 'queue_update',
+    payload,
+  }).then(() => {
+    console.log('[Notify] Realtime sent ✓');
+  }).catch(e => {
+    console.warn('[Notify] Realtime send failed:', e.message);
   });
 }
 
-// ── Listen for updates (receptionist side) ───────────────────────────────────
+// ── Listen for updates (called from Queue/receptionist) ───────────────────────
 export function onQueueUpdate(callback) {
   const unsubs = [];
 
-  // 1. Same device
+  // Same device
   if (bc) {
     const handler = (e) => {
       console.log('[Notify] BroadcastChannel received', e.data);
@@ -109,36 +109,30 @@ export function onQueueUpdate(callback) {
     unsubs.push(() => bc.removeEventListener('message', handler));
   }
 
-  // 2. Cross-device
+  // Cross-device
   const client = getClient();
-  if (!client) {
-    console.warn('[Notify] Supabase not configured — realtime disabled');
-    return () => unsubs.forEach(fn => fn());
-  }
-
   const clinicId = getClinicId();
-  if (!clinicId) {
-    console.warn('[Notify] No clinic_id — cannot subscribe to realtime');
+
+  if (!client || !clinicId) {
+    console.warn('[Notify] Realtime listener not set up — missing client or clinicId');
     return () => unsubs.forEach(fn => fn());
   }
 
   const channelName = `clinic-queue-${clinicId}`;
-  console.log('[Notify] Subscribing to Realtime channel:', channelName);
+  console.log('[Notify] Listening on channel:', channelName);
 
   const ch = client
     .channel(channelName)
     .on('broadcast', { event: 'queue_update' }, ({ payload }) => {
-      console.log('[Notify] Realtime received:', payload);
+      console.log('[Notify] Realtime received ✓', payload);
+      playPing();
       callback(payload);
     })
     .subscribe((status) => {
-      console.log('[Notify] Realtime subscription status:', status);
+      console.log('[Notify] Listener subscription:', status);
     });
 
-  unsubs.push(() => {
-    ch.unsubscribe();
-    console.log('[Notify] Unsubscribed from', channelName);
-  });
+  unsubs.push(() => ch.unsubscribe());
 
   return () => unsubs.forEach(fn => fn());
 }
