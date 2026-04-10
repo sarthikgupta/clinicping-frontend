@@ -3,19 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../lib/api';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuthStore();
+  const { login: doLogin } = useAuthStore();
   const navigate = useNavigate();
+
+  const isEmail = login.includes('@');
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await doLogin(login.trim(), password);
       navigate('/queue');
     } catch (err) {
       const msg = err.response?.data?.error
@@ -23,9 +25,7 @@ export default function Login() {
         || err.message
         || 'Login failed';
       setError(msg);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   return (
@@ -41,32 +41,36 @@ export default function Login() {
         </div>
 
         <h1 style={S.title}>Welcome back</h1>
-        <p style={S.sub}>Sign in to your clinic dashboard</p>
+        <p style={S.sub}>Sign in with your username or email</p>
 
-        {error && (
-          <div style={S.errorBox}>
-            {error}
-            <div style={{ fontSize: 11, marginTop: 4, opacity: 0.8 }}>
-              API: {import.meta.env.VITE_API_URL || 'not set'}
-            </div>
-          </div>
-        )}
+        {error && <div style={S.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit} autoComplete="on">
           <div style={S.field}>
-            <label style={S.label}>Email address</label>
+            <label style={S.label}>
+              Username or email
+            </label>
             <input
               style={S.input}
-              type="email"
-              name="email"
-              autoComplete="email"
-              placeholder="doctor@clinic.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              name="username"
+              autoComplete="username"
+              placeholder="e.g. dr.anumeha or admin@clinic.com"
+              value={login}
+              onChange={e => setLogin(e.target.value)}
               required
               autoFocus
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
+            {login.length > 0 && (
+              <div style={S.loginHint}>
+                {isEmail ? '📧 Logging in with email' : '👤 Logging in with username'}
+              </div>
+            )}
           </div>
+
           <div style={S.field}>
             <label style={S.label}>Password</label>
             <input
@@ -80,6 +84,7 @@ export default function Login() {
               required
             />
           </div>
+
           <button
             type="submit"
             style={{ ...S.btn, opacity: loading ? 0.7 : 1 }}
@@ -121,7 +126,8 @@ const S = {
   field: { marginBottom: 16 },
   label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 6 },
   input: { display: 'block', width: '100%', padding: '12px 14px', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 15, color: '#1a1a1a', outline: 'none', background: '#fff', boxSizing: 'border-box', fontFamily: 'inherit', WebkitAppearance: 'none' },
-  btn: { display: 'block', width: '100%', marginTop: 20, padding: '14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit', WebkitAppearance: 'none' },
+  loginHint: { fontSize: 11, color: '#888', marginTop: 5 },
+  btn: { display: 'block', width: '100%', marginTop: 20, padding: '14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' },
   footer: { textAlign: 'center', marginTop: 20, fontSize: 14, color: '#888' },
   link: { color: '#1D9E75', fontWeight: 600, textDecoration: 'none' },
 };
