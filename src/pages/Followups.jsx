@@ -211,15 +211,23 @@ export default function Followups() {
               {/* Appointment date/time if type is appointment */}
               {form.type === 'appointment' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <label style={S.label}>Appointment date</label>
-                    <input style={S.inp} type="date" value={form.appointment_date}
-                      onChange={e => setForm(f => ({ ...f, appointment_date: e.target.value }))} />
+                    <input
+                      style={{ ...S.inp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                      type="date"
+                      value={form.appointment_date}
+                      onChange={e => setForm(f => ({ ...f, appointment_date: e.target.value }))}
+                    />
                   </div>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <label style={S.label}>Time</label>
-                    <input style={S.inp} type="time" value={form.appointment_time}
-                      onChange={e => setForm(f => ({ ...f, appointment_time: e.target.value }))} />
+                    <input
+                      style={{ ...S.inp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                      type="time"
+                      value={form.appointment_time}
+                      onChange={e => setForm(f => ({ ...f, appointment_time: e.target.value }))}
+                    />
                   </div>
                 </div>
               )}

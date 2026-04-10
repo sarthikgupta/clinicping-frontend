@@ -475,25 +475,41 @@ export default function Doctor() {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                        <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Date</label>
-                          <input style={{ ...S.medInp, width: '100%' }} type="date" value={apptDate}
+                          <input
+                            style={{ ...S.medInp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                            type="date"
+                            value={apptDate}
                             min={new Date().toISOString().split('T')[0]}
-                            onChange={e => setApptDate(e.target.value)} />
+                            onChange={e => setApptDate(e.target.value)}
+                          />
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Time</label>
-                          <input style={{ ...S.medInp, width: '100%' }} type="time" value={apptTime}
-                            onChange={e => setApptTime(e.target.value)} />
+                          <input
+                            style={{ ...S.medInp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                            type="time"
+                            value={apptTime}
+                            onChange={e => setApptTime(e.target.value)}
+                          />
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Note</label>
-                          <input style={{ ...S.medInp, width: '100%' }} placeholder="e.g. Follow-up BP check"
-                            value={apptNote} onChange={e => setApptNote(e.target.value)} />
+                          <input
+                            style={{ ...S.medInp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                            placeholder="e.g. Follow-up BP check"
+                            value={apptNote}
+                            onChange={e => setApptNote(e.target.value)}
+                          />
                         </div>
                       </div>
-                      {apptDate && <div style={S.apptHint}>WhatsApp reminder will be sent on {new Date(apptDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at 9:00 AM</div>}
+                      {apptDate && (
+                        <div style={S.apptHint}>
+                          WhatsApp reminder will be sent on {new Date(apptDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at 9:00 AM
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
