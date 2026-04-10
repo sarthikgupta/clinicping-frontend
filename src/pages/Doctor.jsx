@@ -260,6 +260,7 @@ export default function Doctor() {
           const nextPatient = data.nextPatient;
           broadcastQueueUpdate({
             action: 'NEXT_PATIENT',
+            clinic_id: selected.clinic_id,
             calledToken: selected.token_number,
             calledName: selected.patients?.name,
             nextToken: nextPatient?.token_number || null,
