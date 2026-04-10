@@ -474,10 +474,23 @@ export default function Doctor() {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
-                      <div style={S.apptRow}>
-                        <div style={{ flex: 1 }}><label style={S.fieldLabel}>Date</label><input style={S.medInp} type="date" value={apptDate} min={new Date().toISOString().split('T')[0]} onChange={e => setApptDate(e.target.value)} /></div>
-                        <div style={{ flex: 1 }}><label style={S.fieldLabel}>Time</label><input style={S.medInp} type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} /></div>
-                        <div style={{ flex: 1 }}><label style={S.fieldLabel}>Note</label><input style={S.medInp} placeholder="e.g. Follow-up BP check" value={apptNote} onChange={e => setApptNote(e.target.value)} /></div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <label style={S.fieldLabel}>Date</label>
+                          <input style={{ ...S.medInp, width: '100%' }} type="date" value={apptDate}
+                            min={new Date().toISOString().split('T')[0]}
+                            onChange={e => setApptDate(e.target.value)} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <label style={S.fieldLabel}>Time</label>
+                          <input style={{ ...S.medInp, width: '100%' }} type="time" value={apptTime}
+                            onChange={e => setApptTime(e.target.value)} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <label style={S.fieldLabel}>Note</label>
+                          <input style={{ ...S.medInp, width: '100%' }} placeholder="e.g. Follow-up BP check"
+                            value={apptNote} onChange={e => setApptNote(e.target.value)} />
+                        </div>
                       </div>
                       {apptDate && <div style={S.apptHint}>WhatsApp reminder will be sent on {new Date(apptDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at 9:00 AM</div>}
                     </div>
@@ -559,7 +572,7 @@ const S = {
   testChip: { display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E1F5EE', color: '#085041', fontSize: 12, padding: '5px 10px', borderRadius: 20, fontWeight: 500 },
   chipRemove: { background: 'none', border: 'none', color: '#0F6E56', cursor: 'pointer', fontSize: 15, lineHeight: 1, padding: 0 },
   addTestBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 7, color: '#1D9E75', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
-  apptRow: { display: 'flex', gap: 12, alignItems: 'flex-start' },
+  apptRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', boxSizing: 'border-box', width: '100%' },
   apptHint: { marginTop: 10, fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '7px 12px', borderRadius: 7 },
   footer: { padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0 },
   btnClear: { padding: '8px 14px', background: '#fff', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 13, color: '#888', cursor: 'pointer' },
