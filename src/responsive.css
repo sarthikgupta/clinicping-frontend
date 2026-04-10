@@ -61,7 +61,3 @@
 button { touch-action: manipulation; }
 * { -webkit-tap-highlight-color: transparent; }
 
-/* iOS zoom fix — ONLY inside app, never on login/signup pages */
-.cp-main input,
-.cp-main textarea,
-.cp-main select { font-size: 16px; }
