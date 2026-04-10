@@ -22,14 +22,13 @@ function getClinicId() {
   } catch { return null; }
 }
 
-// Keep a persistent broadcast channel so it doesn't get GC'd
+// Persistent broadcast channel so it doesn't get GC'd
 let _broadcastChannel = null;
 function getBroadcastChannel() {
   const clinicId = getClinicId();
   if (!clinicId) return null;
   const client = getClient();
   if (!client) return null;
-
   const channelName = `clinic-queue-${clinicId}`;
   if (!_broadcastChannel) {
     _broadcastChannel = client.channel(channelName);
@@ -45,58 +44,71 @@ const bc = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('clinicping_queue')
   : null;
 
-// Add this at module level
-let _audioCtx = null;
-
-function getAudioCtx() {
-  if (!_audioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx) _audioCtx = new AudioCtx();
-  }
-  return _audioCtx;
-}
-
-// Call this once on first user click — add to Queue.jsx
+// ── Audio unlock (call on first user interaction) ─────────────────────────────
 export function unlockAudio() {
-  const ctx = getAudioCtx();
-  if (ctx && ctx.state === 'suspended') {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    // Play a silent buffer — tricks mobile browsers into unlocking audio
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
     ctx.resume();
+    console.log('[Notify] Audio unlocked, state:', ctx.state);
+  } catch (e) {
+    console.warn('[Notify] Audio unlock failed:', e.message);
   }
 }
 
+// ── Play notification ping ────────────────────────────────────────────────────
 export function playPing() {
   try {
-    const ctx = getAudioCtx();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
-    
-    [880, 660].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.15);
-      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + i * 0.15 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.35);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.35);
-    });
-  } catch (e) { console.warn('[Notify] Audio failed:', e.message); }
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+
+    // Create fresh context each time — most reliable on mobile
+    const ctx = new AudioCtx();
+
+    const play = () => {
+      [880, 660].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.15);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + i * 0.15 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.35);
+        osc.start(ctx.currentTime + i * 0.15);
+        osc.stop(ctx.currentTime + i * 0.15 + 0.4);
+      });
+    };
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(play);
+    } else {
+      play();
+    }
+  } catch (e) {
+    console.warn('[Notify] Audio ping failed:', e.message);
+  }
 }
 
-// ── Send update (called from Doctor) ─────────────────────────────────────────
+// ── Broadcast update (called from Doctor) ────────────────────────────────────
 export function broadcastQueueUpdate(data) {
   const clinicId = data.clinic_id || getClinicId();
   const payload = { ...data, clinic_id: clinicId };
 
-  // Same device
+  // Same device/browser
   if (bc) {
     bc.postMessage(payload);
     console.log('[Notify] BroadcastChannel sent', payload);
   }
 
-  // Cross-device — use persistent channel
+  // Cross-device
   const ch = getBroadcastChannel();
   if (!ch) {
     console.warn('[Notify] No broadcast channel available');

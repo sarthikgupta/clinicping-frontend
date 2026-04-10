@@ -2,13 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { api, useAuthStore } from '../lib/api';
 import { onQueueUpdate, playPing, unlockAudio } from '../lib/notify';
 
-const STATUS_BADGE = {
-  consulting: { bg: '#1D9E75', color: '#fff', label: 'Consulting' },
-  next:       { bg: '#E1F5EE', color: '#085041', label: 'Next' },
-  waiting:    { bg: '#FAEEDA', color: '#854F0B', label: 'Waiting' },
-  done:       { bg: '#f0f0ee', color: '#888', label: 'Done' },
-};
-
 export default function Queue() {
   const { user } = useAuthStore();
   const [queue, setQueue] = useState([]);
@@ -19,7 +12,7 @@ export default function Queue() {
   const [form, setForm] = useState({ name: '', phone: '', reason: '', doctor_id: '' });
   const [errors, setErrors] = useState({});
   const [adding, setAdding] = useState(false);
-  const [advancing, setAdvancing] = useState(null); // track which doctor is advancing
+  const [advancing, setAdvancing] = useState(null);
   const [toast, setToast] = useState({ msg: '', type: 'success' });
   const [showDone, setShowDone] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -43,6 +36,19 @@ export default function Queue() {
     finally { setLoading(false); }
   }, []);
 
+  // Unlock audio on first user interaction (mobile requirement)
+  useEffect(() => {
+    function unlock() {
+      unlockAudio();
+    }
+    document.addEventListener('touchstart', unlock, { once: true });
+    document.addEventListener('click', unlock, { once: true });
+    return () => {
+      document.removeEventListener('touchstart', unlock);
+      document.removeEventListener('click', unlock);
+    };
+  }, []);
+
   useEffect(() => {
     if (canSelectDoctor) {
       api.get('/api/queue/doctors').then(r => {
@@ -52,13 +58,21 @@ export default function Queue() {
     }
   }, [canSelectDoctor]);
 
-  useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+  }, [load]);
 
   useEffect(() => {
     const unsub = onQueueUpdate((data) => {
       if (data.action === 'NEXT_PATIENT') {
-        load(); playPing();
-        showNotification(data.nextName ? `#${data.nextToken} ${data.nextName} — please come in` : 'Queue advanced');
+        load();
+        playPing();
+        const msg = data.nextName
+          ? `#${data.nextToken} ${data.nextName} — please come in`
+          : 'Queue advanced by doctor';
+        showNotification(msg);
       }
     });
     return unsub;
@@ -78,8 +92,10 @@ export default function Queue() {
   function validateForm() {
     const e = {};
     if (!form.name.trim()) e.name = 'Patient name is required';
-    if (form.phone && !/^\d{10}$/.test(form.phone.replace(/\s/g, ''))) e.phone = 'Enter a valid 10-digit number';
-    if (canSelectDoctor && doctors.length > 0 && !form.doctor_id) e.doctor = 'Please select a doctor';
+    if (form.phone && !/^\d{10}$/.test(form.phone.replace(/\s/g, '')))
+      e.phone = 'Enter a valid 10-digit number';
+    if (canSelectDoctor && doctors.length > 0 && !form.doctor_id)
+      e.doctor = 'Please select a doctor';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -109,14 +125,11 @@ export default function Queue() {
     } finally { setAdding(false); }
   }
 
-  // Advance queue for a SPECIFIC doctor
   async function handleAdvance(doctorId, doctorName) {
     setAdvancing(doctorId);
     try {
-      // Find the consulting or first waiting token for this doctor
       const doctorQueue = queue.filter(t =>
-        !['done', 'cancelled'].includes(t.status) &&
-        t.doctor_id === doctorId
+        !['done', 'cancelled'].includes(t.status) && t.doctor_id === doctorId
       );
       const consulting = doctorQueue.find(t => t.status === 'consulting')
         || doctorQueue.find(t => t.status === 'next')
@@ -147,7 +160,7 @@ export default function Queue() {
   const doneQueue = queue.filter(t => t.status === 'done');
   const cancelledCount = queue.filter(t => t.status === 'cancelled').length;
 
-  // Group active queue by doctor
+  // Group by doctor
   const queueByDoctor = {};
   activeQueue.forEach(token => {
     const drId = token.doctor_id || 'unassigned';
@@ -155,19 +168,21 @@ export default function Queue() {
     queueByDoctor[drId].push(token);
   });
 
-  // Get doctor display name
   function getDoctorName(drId) {
     if (drId === 'unassigned') return 'Unassigned';
     const dr = doctors.find(d => d.id === drId);
     if (dr) return dr.name;
-    // Fallback: get from queue token
     const token = queue.find(t => t.doctor_id === drId);
     return token?.clinic_users?.name || 'Doctor';
   }
 
   return (
     <div style={S.page}>
-      {toast.msg && <div style={{ ...S.toast, background: toast.type === 'error' ? '#A32D2D' : '#1a1a1a' }}>{toast.msg}</div>}
+      {toast.msg && (
+        <div style={{ ...S.toast, background: toast.type === 'error' ? '#A32D2D' : '#1a1a1a' }}>
+          {toast.msg}
+        </div>
+      )}
 
       {notification && (
         <div style={S.notifBanner}>
@@ -186,7 +201,7 @@ export default function Queue() {
           <p style={S.date}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </div>
         <button style={S.addBtn} onClick={() => { setAddOpen(true); setErrors({}); }}>
-          <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Add patient
+          + Add patient
         </button>
       </div>
 
@@ -206,13 +221,14 @@ export default function Queue() {
         ))}
       </div>
 
-      {/* ── Queue grouped by doctor ── */}
+      {/* Queue grouped by doctor */}
       {loading ? (
-        <div style={S.emptyState}><div style={S.spinner} /><p style={{ color: '#888', marginTop: 12 }}>Loading...</p></div>
+        <div style={{ ...S.card, ...S.emptyState }}>
+          <p style={{ color: '#888' }}>Loading...</p>
+        </div>
       ) : activeQueue.length === 0 ? (
         <div style={{ ...S.card, ...S.emptyState }}>
-          <div style={S.emptyIcon}><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="4" y="8" width="24" height="3" rx="1.5" fill="#D3D1C7"/><rect x="4" y="15" width="16" height="3" rx="1.5" fill="#D3D1C7"/><rect x="4" y="22" width="20" height="3" rx="1.5" fill="#D3D1C7"/></svg></div>
-          <p style={{ color: '#888', fontSize: 14, marginTop: 10 }}>No patients in queue</p>
+          <p style={{ color: '#888', fontSize: 14 }}>No patients in queue</p>
           <p style={{ color: '#aaa', fontSize: 12, marginTop: 4 }}>Tap "+ Add patient" to get started</p>
         </div>
       ) : (
@@ -221,7 +237,6 @@ export default function Queue() {
           const consulting = tokens.find(t => t.status === 'consulting');
           const isAdvancing = advancing === drId;
 
-          // Advance button label for this doctor
           let advLabel = isAdvancing ? 'Processing...' : '';
           if (!isAdvancing) {
             if (!consulting && tokens.length > 0) advLabel = `Call first patient → ${drName}`;
@@ -230,7 +245,6 @@ export default function Queue() {
 
           return (
             <div key={drId} style={S.doctorSection}>
-              {/* Doctor header */}
               {isMultiDoctor && (
                 <div style={S.doctorHeader}>
                   <div style={S.doctorAvatar}>{drName.charAt(0).toUpperCase()}</div>
@@ -238,7 +252,7 @@ export default function Queue() {
                     <span style={S.doctorName}>{drName}</span>
                     <span style={S.doctorCount}>{tokens.length} patient{tokens.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <div style={S.doctorStatusDots}>
+                  <div style={{ display: 'flex', gap: 6 }}>
                     {['consulting', 'waiting'].map(s => {
                       const count = tokens.filter(t => t.status === s || (s === 'waiting' && t.status === 'next')).length;
                       if (!count) return null;
@@ -250,7 +264,6 @@ export default function Queue() {
                 </div>
               )}
 
-              {/* Advance button per doctor */}
               <button
                 style={{ ...S.advanceBtn, opacity: tokens.length > 0 ? 1 : 0.45 }}
                 onClick={() => handleAdvance(drId, drName)}
@@ -259,21 +272,15 @@ export default function Queue() {
                 {advLabel}
               </button>
 
-              {/* Patient rows for this doctor */}
               <div style={S.card}>
                 <div style={S.cardHead}>
-                  <span>
-                    {isMultiDoctor ? `${drName}'s patients` : `Active patients`} ({tokens.length})
-                  </span>
-                  <span style={{ fontSize: 11, color: '#888' }}>Auto-refreshes every 10s</span>
+                  <span>{isMultiDoctor ? `${drName}'s patients` : 'Active patients'} ({tokens.length})</span>
+                  <span style={{ fontSize: 11, color: '#888' }}>Auto-refreshes every 20s</span>
                 </div>
                 {tokens.map((token, i) => {
-                  const badge = STATUS_BADGE[token.status] || STATUS_BADGE.waiting;
                   const isConsulting = token.status === 'consulting';
-                  // Wait time within THIS doctor's queue only
                   const waitingAhead = tokens.filter(t =>
-                    ['waiting', 'next'].includes(t.status) &&
-                    t.token_number < token.token_number
+                    ['waiting', 'next'].includes(t.status) && t.token_number < token.token_number
                   ).length;
 
                   return (
@@ -294,14 +301,14 @@ export default function Queue() {
                         <div style={S.patientMeta}>
                           {token.patients?.phone && token.patients.phone !== '' && `${token.patients.phone}`}
                           {token.reason && (token.patients?.phone ? ` · ${token.reason}` : token.reason)}
-                          {token.status === 'waiting' && (
-                            <span style={{ color: '#854F0B' }}> · ~{(waitingAhead + 1) * 10} min</span>
-                          )}
+                          {token.status === 'waiting' && <span style={{ color: '#854F0B' }}> · ~{(waitingAhead + 1) * 10} min</span>}
                         </div>
                       </div>
                       {!isConsulting && (
-                        <button style={S.cancelBtn} onClick={() => handleCancel(token.id)} title="Remove">
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                        <button style={S.cancelBtn} onClick={() => handleCancel(token.id)}>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
                         </button>
                       )}
                     </div>
@@ -317,7 +324,9 @@ export default function Queue() {
       {doneQueue.length > 0 && (
         <div style={{ marginTop: 14 }}>
           <button style={S.doneToggle} onClick={() => setShowDone(s => !s)}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: showDone ? 'rotate(180deg)' : 'none', transition: '0.2s' }}><path d="M2 4l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ transform: showDone ? 'rotate(180deg)' : 'none', transition: '0.2s' }}>
+              <path d="M2 4l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
             {showDone ? 'Hide' : 'Show'} done patients ({doneQueue.length})
           </button>
           {showDone && (
@@ -337,8 +346,6 @@ export default function Queue() {
         </div>
       )}
 
-      <div style={S.page} onClick={unlockAudio} onTouchStart={unlockAudio}></div>
-
       {/* Add patient modal */}
       {addOpen && (
         <div style={S.overlay} onClick={() => setAddOpen(false)}>
@@ -349,16 +356,19 @@ export default function Queue() {
                 <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>Token assigned automatically</div>
               </div>
               <button style={S.closeBtn} onClick={() => setAddOpen(false)}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
               </button>
             </div>
+
             <form onSubmit={handleAdd}>
               {canSelectDoctor && doctors.length > 0 && (
                 <div style={S.fieldGroup}>
                   <label style={S.label}>Assign to doctor <span style={{ color: '#E24B4A' }}>*</span></label>
                   {doctors.length === 1 ? (
-                    <div style={S.singleDoctor}>
-                      <div style={S.drAvatar}>{doctors[0].name.charAt(0)}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#E1F5EE', borderRadius: 10 }}>
+                      <div style={{ ...S.drAvatar }}>{doctors[0].name.charAt(0)}</div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{doctors[0].name}</div>
                         {doctors[0].speciality && <div style={{ fontSize: 12, color: '#888' }}>{doctors[0].speciality}</div>}
@@ -374,11 +384,14 @@ export default function Queue() {
                             {dr.name.charAt(0)}
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: form.doctor_id === dr.id ? '#085041' : '#1a1a1a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{dr.name}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: form.doctor_id === dr.id ? '#085041' : '#1a1a1a' }}>{dr.name}</div>
                             {dr.speciality && <div style={{ fontSize: 11, color: '#aaa' }}>{dr.speciality}</div>}
                           </div>
                           {form.doctor_id === dr.id && (
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#1D9E75"/><path d="M4 7l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                              <circle cx="7" cy="7" r="6" fill="#1D9E75"/>
+                              <path d="M4 7l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
                           )}
                         </div>
                       ))}
@@ -451,14 +464,11 @@ const S = {
   doctorInfo: { flex: 1, display: 'flex', alignItems: 'center', gap: 10 },
   doctorName: { fontSize: 15, fontWeight: 700, color: '#1a1a1a' },
   doctorCount: { fontSize: 12, color: '#888' },
-  doctorStatusDots: { display: 'flex', gap: 6 },
   statusDot: { fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 500 },
   advanceBtn: { width: '100%', padding: '12px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, marginBottom: 10, cursor: 'pointer', transition: 'opacity 0.15s' },
   card: { background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden' },
   cardHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #f0f0ee', fontSize: 13, fontWeight: 500, color: '#444' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px' },
-  emptyIcon: { width: 56, height: 56, borderRadius: '50%', background: '#f5f5f3', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  spinner: { width: 24, height: 24, border: '2px solid #E1F5EE', borderTop: '2px solid #1D9E75', borderRadius: '50%' },
   row: { display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', position: 'relative' },
   consultingBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: '#1D9E75' },
   tokenCircle: { width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
@@ -474,7 +484,7 @@ const S = {
   closeBtn: { background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', padding: 4 },
   fieldGroup: { marginBottom: 16 },
   label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 6 },
-  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, outline: 'none', fontSize: 14, color: '#1a1a1a' },
+  input: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, outline: 'none', fontSize: 14, color: '#1a1a1a', boxSizing: 'border-box' },
   inputError: { borderColor: '#E24B4A', background: '#fff8f8' },
   errorMsg: { fontSize: 12, color: '#E24B4A', marginTop: 5 },
   phoneWrap: { display: 'flex', alignItems: 'center', border: '1.5px solid #e8e8e5', borderRadius: 8, overflow: 'hidden', background: '#fff' },
@@ -484,5 +494,4 @@ const S = {
   drCard: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s' },
   drCardActive: { borderColor: '#1D9E75', background: '#E1F5EE' },
   drAvatar: { width: 36, height: 36, borderRadius: '50%', background: '#E1F5EE', color: '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
-  singleDoctor: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#E1F5EE', borderRadius: 10 },
 };
