@@ -34,12 +34,13 @@ export const useAuthStore = create((set, get) => ({
   isReceptionist: () => get().user?.role === 'receptionist',
   role: () => get().user?.role || null,
 
-  // login accepts email OR username
-  login: async (loginIdentifier, password) => {
-    const { data } = await api.post('/api/auth/login', {
-      login: loginIdentifier,
-      password,
-    });
+  // email login OR clinic_code + username login
+  login: async (email, password, clinicCode, username) => {
+    const body = email
+      ? { email, password }
+      : { clinic_code: clinicCode, login: username, password };
+
+    const { data } = await api.post('/api/auth/login', body);
     localStorage.setItem('cp_token', data.token);
     localStorage.setItem('cp_user', JSON.stringify(data.user));
     localStorage.setItem('cp_clinic', JSON.stringify(data.clinic));
