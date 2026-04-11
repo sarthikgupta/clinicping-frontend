@@ -234,7 +234,7 @@ export default function Followups() {
 
               <label style={S.label}>Send at</label>
               <input style={{ ...S.inp, marginBottom: 18 }} type="datetime-local"
-                value={form.scheduled_at}
+                value={new Date(form.scheduled_at).toISOString()}
                 onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))} required />
 
               <button style={S.submitBtn} disabled={saving}>
@@ -251,13 +251,13 @@ export default function Followups() {
 function tomorrowAt7() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  d.setHours(7, 0, 0, 0);
+  d.setHours(1, 30, 0, 0);
   return d.toISOString().slice(0, 16);
 }
 
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(d).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true, });
 }
 
 const S = {
