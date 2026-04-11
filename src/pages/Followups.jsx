@@ -251,8 +251,10 @@ export default function Followups() {
 function tomorrowAt7() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  d.setHours(1, 30, 0, 0);
-  return d.toISOString().slice(0, 16);
+  d.setHours(7, 0, 0, 0);
+  // Format as YYYY-MM-DDTHH:MM in LOCAL time (not UTC)
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function fmtDate(d) {
