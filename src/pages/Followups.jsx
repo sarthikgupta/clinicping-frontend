@@ -8,14 +8,12 @@ const TYPES = [
   { key: 'wellness', label: 'Wellness check', desc: 'Ask how patient is feeling' },
 ];
 
-// Format local datetime string for datetime-local input (YYYY-MM-DDTHH:MM)
 function toLocalInputString(date) {
   const d = date instanceof Date ? date : new Date(date);
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// Default: tomorrow at 9 AM
 function defaultScheduleTime() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
@@ -23,17 +21,12 @@ function defaultScheduleTime() {
   return toLocalInputString(d);
 }
 
-// Display date nicely
 function fmtDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
   });
 }
 
@@ -53,6 +46,7 @@ export default function Followups() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const dropRef = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -106,37 +100,32 @@ export default function Followups() {
     e.preventDefault();
     if (!selectedPatient) { showToast('Please select a patient'); return; }
     if (!scheduledAt) { showToast('Please set a send time'); return; }
-
     setSaving(true);
     try {
       await api.post('/api/followups', {
         patient_id: selectedPatient.id,
         type,
-        scheduled_at: scheduledAt, // send local time string as-is
+        scheduled_at: scheduledAt,
         appointment_date: apptDate || null,
         appointment_time: apptTime || null,
+        message: JSON.stringify({ date: apptDate, time: apptTime }),
       });
       showToast('Follow-up scheduled ✓');
       setModalOpen(false);
       loadAll();
     } catch (err) {
-      showToast(err.response?.data?.error || 'Failed to schedule');
+      showToast(err.response?.data?.error || 'Failed');
     } finally { setSaving(false); }
   }
 
   async function sendNow(id) {
-    try {
-      await api.post(`/api/followups/${id}/send-now`);
-      showToast('Sent via WhatsApp ✓');
-      loadAll();
-    } catch { showToast('Send failed'); }
+    try { await api.post(`/api/followups/${id}/send-now`); showToast('Sent ✓'); loadAll(); }
+    catch { showToast('Send failed'); }
   }
 
   async function cancel(id) {
-    try {
-      await api.delete(`/api/followups/${id}`);
-      loadAll();
-    } catch { showToast('Failed to cancel'); }
+    try { await api.delete(`/api/followups/${id}`); loadAll(); }
+    catch { showToast('Failed'); }
   }
 
   const list = tab === 'pending' ? pending : sent;
@@ -150,7 +139,7 @@ export default function Followups() {
           <h1 style={S.title}>Follow-ups</h1>
           <p style={S.sub}>Automated WhatsApp reminders for patients</p>
         </div>
-        <button style={S.addBtn} onClick={openModal}>+ Schedule follow-up</button>
+        <button style={S.addBtn} onClick={openModal}>+ Schedule</button>
       </div>
 
       <div style={S.tabs}>
@@ -174,9 +163,7 @@ export default function Followups() {
               </div>
               <div style={S.meta}>
                 {fu.patients?.phone && fu.patients.phone !== '' && `${fu.patients.phone} · `}
-                {tab === 'pending'
-                  ? `Scheduled: ${fmtDate(fu.scheduled_at)}`
-                  : `Sent: ${fmtDate(fu.sent_at)}`}
+                {tab === 'pending' ? `Scheduled: ${fmtDate(fu.scheduled_at)}` : `Sent: ${fmtDate(fu.sent_at)}`}
               </div>
             </div>
             {tab === 'pending' && (
@@ -190,7 +177,6 @@ export default function Followups() {
         ))}
       </div>
 
-      {/* Modal */}
       {modalOpen && (
         <div style={S.overlay} onClick={() => setModalOpen(false)}>
           <div style={S.modal} onClick={e => e.stopPropagation()}>
@@ -201,8 +187,8 @@ export default function Followups() {
 
             <form onSubmit={handleSchedule}>
 
-              {/* Patient search */}
-              <div style={{ marginBottom: 16 }} ref={dropRef}>
+              {/* Patient search — contained within modal */}
+              <div style={{ marginBottom: 16, position: 'relative' }} ref={dropRef}>
                 <label style={S.label}>Patient</label>
                 <div style={S.searchWrap}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: '#aaa', flexShrink: 0 }}>
@@ -210,22 +196,25 @@ export default function Followups() {
                     <path d="M9.5 9.5L12 12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
                   <input
+                    ref={searchRef}
                     style={S.searchInput}
                     placeholder="Search by name or phone..."
                     value={patientSearch}
                     onChange={e => { setPatientSearch(e.target.value); setSelectedPatient(null); setShowDropdown(true); }}
-                    onFocus={() => setShowDropdown(true)}
+                    onFocus={() => { if (patientSearch) setShowDropdown(true); }}
                     autoComplete="off"
                   />
-                  {selectedPatient && <span style={{ color: '#1D9E75', fontWeight: 700 }}>✓</span>}
+                  {selectedPatient && <span style={{ color: '#1D9E75', fontWeight: 700, flexShrink: 0 }}>✓</span>}
                 </div>
+                {/* Dropdown — contained within modal width */}
                 {showDropdown && patientSearch.length > 0 && (
                   <div style={S.dropdown}>
                     {filteredPatients.length === 0
                       ? <div style={S.dropEmpty}>No patients found</div>
                       : filteredPatients.map(p => (
-                        <div key={p.id} style={S.dropItem} onClick={() => selectPatient(p)}>
-                          <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
+                        <div key={p.id} style={S.dropItem}
+                          onMouseDown={e => { e.preventDefault(); selectPatient(p); }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{p.name}</div>
                           <div style={{ fontSize: 12, color: '#888' }}>{p.phone || 'No phone'} · {p.visit_count} visit{p.visit_count !== 1 ? 's' : ''}</div>
                         </div>
                       ))}
@@ -233,46 +222,43 @@ export default function Followups() {
                 )}
               </div>
 
-              {/* Type */}
+              {/* Type selector */}
               <label style={S.label}>Type</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-                {TYPES.map(t => (
-                  <div key={t.key}
-                    style={{ ...S.typeCard, ...(type === t.key ? S.typeCardActive : {}) }}
-                    onClick={() => setType(t.key)}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: type === t.key ? '#085041' : '#1a1a1a' }}>{t.label}</div>
-                    <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>{t.desc}</div>
-                  </div>
-                ))}
+                {TYPES.map(t => {
+                  const isActive = type === t.key;
+                  return (
+                    <div key={t.key}
+                      style={{
+                        ...S.typeCard,
+                        borderColor: isActive ? '#1D9E75' : '#e8e8e5',
+                        background: isActive ? '#E1F5EE' : '#fff',
+                      }}
+                      onClick={() => setType(t.key)}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: isActive ? '#085041' : '#1a1a1a' }}>{t.label}</div>
+                      <div style={{ fontSize: 11, color: isActive ? '#0F6E56' : '#aaa', marginTop: 2 }}>{t.desc}</div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Appointment date/time if type is appointment */}
+              {/* Appointment fields */}
               {type === 'appointment' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
                   <div>
                     <label style={S.label}>Appointment date</label>
-                    <input
-                      style={S.inp}
-                      type="date"
-                      value={apptDate}
-                      onChange={e => setApptDate(e.target.value)}
-                    />
+                    <input style={S.inp} type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
                   </div>
                   <div>
                     <label style={S.label}>Time</label>
-                    <input
-                      style={S.inp}
-                      type="time"
-                      value={apptTime}
-                      onChange={e => setApptTime(e.target.value)}
-                    />
+                    <input style={S.inp} type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
                   </div>
                 </div>
               )}
 
               {/* Send at */}
-              <div style={{ marginBottom: 18 }}>
-                <label style={S.label}>Send at</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={S.label}>Send reminder at</label>
                 <input
                   style={S.inp}
                   type="datetime-local"
@@ -280,12 +266,13 @@ export default function Followups() {
                   onChange={e => setScheduledAt(e.target.value)}
                   required
                 />
-                <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
-                  Message will be sent at this time
+                <div style={{ fontSize: 11, color: '#aaa', marginTop: 5 }}>
+                  WhatsApp message will be sent at this time
                 </div>
               </div>
 
-              <button style={S.submitBtn} disabled={saving || !selectedPatient}>
+              <button style={{ ...S.submitBtn, opacity: (!selectedPatient || saving) ? 0.6 : 1 }}
+                disabled={saving || !selectedPatient}>
                 {saving ? 'Scheduling...' : 'Schedule follow-up'}
               </button>
             </form>
@@ -317,17 +304,16 @@ const S = {
   cancelBtn: { padding: '6px 14px', background: 'none', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, fontSize: 12, color: '#888', cursor: 'pointer', flexShrink: 0 },
   sentBadge: { fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#E1F5EE', color: '#085041', flexShrink: 0 },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 },
-  modal: { background: '#fff', borderRadius: 14, padding: 24, width: 460, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto' },
+  modal: { background: '#fff', borderRadius: 14, padding: 24, width: 460, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box' },
   modalHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   closeBtn: { background: 'none', border: 'none', fontSize: 18, color: '#aaa', cursor: 'pointer' },
   label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 6 },
-  searchWrap: { display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e8e8e5', borderRadius: 8, padding: '10px 12px', background: '#fff', position: 'relative' },
-  searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#1a1a1a', background: 'transparent', minWidth: 0 },
-  dropdown: { position: 'absolute', left: 0, right: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 200, maxHeight: 220, overflowY: 'auto', marginTop: 4 },
+  searchWrap: { display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e8e8e5', borderRadius: 8, padding: '10px 12px', background: '#fff' },
+  searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#1a1a1a', background: 'transparent', minWidth: 0, width: '100%' },
+  dropdown: { position: 'absolute', left: 0, right: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 200, maxHeight: 200, overflowY: 'auto', marginTop: 4 },
   dropEmpty: { padding: '14px 16px', color: '#aaa', fontSize: 13, textAlign: 'center' },
   dropItem: { padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f5f5f3' },
   inp: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 14, outline: 'none', color: '#1a1a1a', boxSizing: 'border-box', background: '#fff', fontFamily: 'inherit' },
-  typeCard: { border: '1.5px solid #e8e8e5', borderRadius: 10, padding: '10px 12px', cursor: 'pointer' },
-  typeCardActive: { borderColor: '#1D9E75', background: '#E1F5EE' },
+  typeCard: { border: '2px solid #e8e8e5', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', transition: 'all 0.15s' },
   submitBtn: { width: '100%', padding: '12px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' },
 };

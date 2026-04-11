@@ -28,43 +28,32 @@ function RoleRoute({ children, allow }) {
   return children;
 }
 
-// After login, redirect based on role
-function DefaultRedirect() {
-  const user = useAuthStore(s => s.user);
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'doctor') return <Navigate to="/doctor" replace />;
-  if (user.role === 'receptionist') return <Navigate to="/queue" replace />;
-  return <Navigate to="/dashboard" replace />; // admin
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* ── Public pages — no auth needed ── */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* App */}
-        <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-          <Route index element={<DefaultRedirect />} />
-
-          {/* All roles */}
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="queue" element={<Queue />} />
-          <Route path="patients" element={<Patients />} />
-          <Route path="followups" element={<Followups />} />
-          <Route path="settings" element={<Settings />} />
-
-          {/* Doctor + Admin */}
-          <Route path="doctor" element={
+        {/* ── App — requires login ── */}
+        <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/queue" element={<Queue />} />
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/followups" element={<Followups />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/doctor" element={
             <RoleRoute allow={['doctor', 'admin']}><Doctor /></RoleRoute>
           } />
-          <Route path="analytics" element={
+          <Route path="/analytics" element={
             <RoleRoute allow={['doctor', 'admin']}><Analytics /></RoleRoute>
           } />
         </Route>
+
+        {/* Catch all — go home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
