@@ -24,7 +24,14 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup({ clinic_name: form.clinic_name, name: form.name, email: form.email, phone: form.phone, password: form.password, city: form.city });
-      navigate('/queue');
+      
+      
+      // In Login.jsx handleSubmit, after await doLogin(...)
+      const u = useAuthStore.getState().user;
+      if (u?.role === 'doctor') navigate('/doctor');
+      else if (u?.role === 'receptionist') navigate('/queue');
+      else navigate('/dashboard');
+      
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Signup failed.');
     } finally { setLoading(false); }

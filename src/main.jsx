@@ -32,8 +32,9 @@ function RoleRoute({ children, allow }) {
 function DefaultRedirect() {
   const user = useAuthStore(s => s.user);
   if (!user) return <Navigate to="/login" replace />;
-  // All roles go to dashboard home first
-  return <Navigate to="/dashboard" replace />;
+  if (user.role === 'doctor') return <Navigate to="/doctor" replace />;
+  if (user.role === 'receptionist') return <Navigate to="/queue" replace />;
+  return <Navigate to="/dashboard" replace />; // admin
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

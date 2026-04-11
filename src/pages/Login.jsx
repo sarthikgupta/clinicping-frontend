@@ -23,7 +23,13 @@ export default function Login() {
       } else {
         await login(email.trim(), password, null, null);
       }
-      navigate('/queue');
+      
+      // In Login.jsx handleSubmit, after await doLogin(...)
+      const u = useAuthStore.getState().user;
+      if (u?.role === 'doctor') navigate('/doctor');
+      else if (u?.role === 'receptionist') navigate('/queue');
+      else navigate('/dashboard');
+
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Login failed');
     } finally { setLoading(false); }
