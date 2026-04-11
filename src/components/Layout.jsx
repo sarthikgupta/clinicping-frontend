@@ -8,6 +8,7 @@ export default function Layout() {
   const role = user?.role || 'receptionist';
 
   const NAV = [
+    { to: '/dashboard', label: 'Home', icon: HomeIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/queue', label: 'Queue', icon: QueueIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/patients', label: 'Patients', icon: PatientsIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/followups', label: 'Follow-ups', icon: FollowupIcon, roles: ['admin', 'doctor', 'receptionist'] },
@@ -22,18 +23,21 @@ export default function Layout() {
     receptionist: { label: 'Reception', bg: '#FAEEDA', color: '#854F0B' },
   };
   const badge = ROLE_BADGE[role] || ROLE_BADGE.receptionist;
+
+  // Bottom nav — max 5 items including Home
   const bottomNav = NAV.slice(0, 5);
+  const currentTitle = NAV.find(n => location.pathname.startsWith(n.to))?.label || 'ClinicPing';
 
   function handleLogout() { logout(); navigate('/login'); }
-
-  const currentTitle = NAV.find(n => n.to === location.pathname)?.label || 'ClinicPing';
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
-      {/* ── Desktop Sidebar ── */}
+      {/* Desktop sidebar */}
       <aside className="cp-sidebar" style={S.sidebar}>
-        <div style={S.logo}>Clinic<span style={{ color: '#1D9E75' }}>Ping</span></div>
+        <div style={S.logo}>
+          Clinic<span style={{ color: '#1D9E75' }}>Ping</span>
+        </div>
         <div style={S.userBlock}>
           <div style={S.clinicName}>{clinic?.name || 'Your Clinic'}</div>
           <div style={S.userRow}>
@@ -57,10 +61,10 @@ export default function Layout() {
         </button>
       </aside>
 
-      {/* ── Mobile Header ── */}
+      {/* Mobile header */}
       <div className="cp-mobile-header" style={S.mobileHeader}>
         <div>
-          <div style={{ fontSize: 13, color: '#888' }}>{clinic?.name}</div>
+          <div style={{ fontSize: 12, color: '#888' }}>{clinic?.name}</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>{currentTitle}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -69,25 +73,25 @@ export default function Layout() {
         </div>
       </div>
 
-      {/* ── Main Content ── */}
+      {/* Main */}
       <main className="cp-main" style={S.main}>
         <Outlet />
         <div className="cp-bottom-pad" />
       </main>
 
-      {/* ── Mobile Bottom Nav ── */}
+      {/* Mobile bottom nav */}
       <nav className="cp-bottom-nav" style={S.bottomNav}>
         {bottomNav.map(({ to, label, icon: Icon }) => {
           const isActive = location.pathname === to;
           return (
             <NavLink key={to} to={to} style={S.bottomNavItem}>
-              <div style={{ color: isActive ? '#1D9E75' : '#aaa', display: 'flex' }}><Icon /></div>
+              <div style={{ color: isActive ? '#1D9E75' : '#aaa' }}><Icon /></div>
               <div style={{ fontSize: 10, marginTop: 2, color: isActive ? '#1D9E75' : '#aaa', fontWeight: isActive ? 700 : 400 }}>{label}</div>
             </NavLink>
           );
         })}
         <button style={{ ...S.bottomNavItem, background: 'none', border: 'none', cursor: 'pointer' }} onClick={handleLogout}>
-          <div style={{ color: '#aaa', display: 'flex' }}><LogoutIcon /></div>
+          <div style={{ color: '#aaa' }}><LogoutIcon /></div>
           <div style={{ fontSize: 10, marginTop: 2, color: '#aaa' }}>Logout</div>
         </button>
       </nav>
@@ -115,6 +119,7 @@ const S = {
   bottomNavItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 6px', textDecoration: 'none', flex: 1, minWidth: 0 },
 };
 
+function HomeIcon() { return <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 8L9 2l7 6v8a1 1 0 01-1 1H3a1 1 0 01-1-1V8z" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/><path d="M6 17v-6h6v6" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/></svg>; }
 function QueueIcon() { return <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="2" rx="1" fill="currentColor"/><rect x="2" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="2" y="11" width="10" height="2" rx="1" fill="currentColor"/></svg>; }
 function FollowupIcon() { return <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M2 3h12v8H2z" rx="1" stroke="currentColor" strokeWidth="1.2" fill="none"/><path d="M2 3l6 5 6-5" stroke="currentColor" strokeWidth="1.2" fill="none"/></svg>; }
 function PatientsIcon() { return <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.2" fill="none"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round"/></svg>; }
