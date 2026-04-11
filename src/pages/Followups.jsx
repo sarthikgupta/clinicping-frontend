@@ -8,6 +8,35 @@ const TYPES = [
   { key: 'wellness', label: 'Wellness check', desc: 'Ask how patient is feeling' },
 ];
 
+// Format local datetime string for datetime-local input (YYYY-MM-DDTHH:MM)
+function toLocalInputString(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Default: tomorrow at 9 AM
+function defaultScheduleTime() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return toLocalInputString(d);
+}
+
+// Display date nicely
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export default function Followups() {
   const [pending, setPending] = useState([]);
   const [sent, setSent] = useState([]);
@@ -17,15 +46,16 @@ export default function Followups() {
   const [patientSearch, setPatientSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [form, setForm] = useState({ type: 'medicine', scheduled_at: tomorrowAt7(), appointment_date: '', appointment_time: '' });
+  const [type, setType] = useState('medicine');
+  const [scheduledAt, setScheduledAt] = useState(defaultScheduleTime());
+  const [apptDate, setApptDate] = useState('');
+  const [apptTime, setApptTime] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
-  const searchRef = useRef(null);
   const dropRef = useRef(null);
 
   useEffect(() => { loadAll(); }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e) {
       if (dropRef.current && !dropRef.current.contains(e.target)) {
@@ -37,19 +67,20 @@ export default function Followups() {
   }, []);
 
   async function loadAll() {
-    const [p, s, pts] = await Promise.all([
-      api.get('/api/followups?status=pending'),
-      api.get('/api/followups?status=sent'),
-      api.get('/api/patients'),
-    ]);
-    setPending(p.data);
-    setSent(s.data);
-    setAllPatients(pts.data);
+    try {
+      const [p, s, pts] = await Promise.all([
+        api.get('/api/followups?status=pending'),
+        api.get('/api/followups?status=sent'),
+        api.get('/api/patients'),
+      ]);
+      setPending(p.data);
+      setSent(s.data);
+      setAllPatients(pts.data);
+    } catch (e) { console.error(e); }
   }
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 3000); }
 
-  // Filtered patients based on search
   const filteredPatients = allPatients.filter(p => {
     const q = patientSearch.toLowerCase();
     return p.name?.toLowerCase().includes(q) || p.phone?.includes(q);
@@ -65,34 +96,47 @@ export default function Followups() {
     setModalOpen(true);
     setSelectedPatient(null);
     setPatientSearch('');
-    setForm({ type: 'medicine', scheduled_at: tomorrowAt7(), appointment_date: '', appointment_time: '' });
+    setType('medicine');
+    setScheduledAt(defaultScheduleTime());
+    setApptDate('');
+    setApptTime('');
   }
 
   async function handleSchedule(e) {
     e.preventDefault();
     if (!selectedPatient) { showToast('Please select a patient'); return; }
+    if (!scheduledAt) { showToast('Please set a send time'); return; }
+
     setSaving(true);
     try {
-      await api.post('/api/followups', { ...form, patient_id: selectedPatient.id });
-      showToast('Follow-up scheduled');
+      await api.post('/api/followups', {
+        patient_id: selectedPatient.id,
+        type,
+        scheduled_at: scheduledAt, // send local time string as-is
+        appointment_date: apptDate || null,
+        appointment_time: apptTime || null,
+      });
+      showToast('Follow-up scheduled ✓');
       setModalOpen(false);
       loadAll();
     } catch (err) {
-      showToast(err.response?.data?.error || 'Failed');
+      showToast(err.response?.data?.error || 'Failed to schedule');
     } finally { setSaving(false); }
   }
 
   async function sendNow(id) {
     try {
       await api.post(`/api/followups/${id}/send-now`);
-      showToast('Sent via WhatsApp');
+      showToast('Sent via WhatsApp ✓');
       loadAll();
     } catch { showToast('Send failed'); }
   }
 
   async function cancel(id) {
-    await api.delete(`/api/followups/${id}`);
-    loadAll();
+    try {
+      await api.delete(`/api/followups/${id}`);
+      loadAll();
+    } catch { showToast('Failed to cancel'); }
   }
 
   const list = tab === 'pending' ? pending : sent;
@@ -122,7 +166,7 @@ export default function Followups() {
           <p style={S.empty}>{tab === 'pending' ? 'No pending follow-ups.' : 'No sent follow-ups yet.'}</p>
         ) : list.map((fu, i) => (
           <div key={fu.id} style={{ ...S.row, borderBottom: i < list.length - 1 ? '1px solid #f0f0ee' : 'none' }}>
-            <div style={S.typeIcon}>{fu.type[0].toUpperCase()}</div>
+            <div style={S.typeIcon}>{fu.type?.[0]?.toUpperCase()}</div>
             <div style={S.info}>
               <div style={S.name}>
                 {fu.patients?.name}
@@ -130,7 +174,9 @@ export default function Followups() {
               </div>
               <div style={S.meta}>
                 {fu.patients?.phone && fu.patients.phone !== '' && `${fu.patients.phone} · `}
-                {tab === 'pending' ? `Scheduled: ${fmtDate(fu.scheduled_at)}` : `Sent: ${fmtDate(fu.sent_at)}`}
+                {tab === 'pending'
+                  ? `Scheduled: ${fmtDate(fu.scheduled_at)}`
+                  : `Sent: ${fmtDate(fu.sent_at)}`}
               </div>
             </div>
             {tab === 'pending' && (
@@ -139,7 +185,7 @@ export default function Followups() {
                 <button style={S.cancelBtn} onClick={() => cancel(fu.id)}>Cancel</button>
               </div>
             )}
-            {tab === 'sent' && <span style={S.sentBadge}>Sent</span>}
+            {tab === 'sent' && <span style={S.sentBadge}>Sent ✓</span>}
           </div>
         ))}
       </div>
@@ -155,89 +201,91 @@ export default function Followups() {
 
             <form onSubmit={handleSchedule}>
 
-              {/* Searchable patient input */}
+              {/* Patient search */}
               <div style={{ marginBottom: 16 }} ref={dropRef}>
                 <label style={S.label}>Patient</label>
                 <div style={S.searchWrap}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: '#aaa' }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ color: '#aaa', flexShrink: 0 }}>
                     <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.3"/>
                     <path d="M9.5 9.5L12 12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
                   </svg>
                   <input
-                    ref={searchRef}
                     style={S.searchInput}
                     placeholder="Search by name or phone..."
                     value={patientSearch}
-                    onChange={e => {
-                      setPatientSearch(e.target.value);
-                      setSelectedPatient(null);
-                      setShowDropdown(true);
-                    }}
+                    onChange={e => { setPatientSearch(e.target.value); setSelectedPatient(null); setShowDropdown(true); }}
                     onFocus={() => setShowDropdown(true)}
                     autoComplete="off"
                   />
-                  {selectedPatient && (
-                    <div style={S.selectedTick}>✓</div>
-                  )}
+                  {selectedPatient && <span style={{ color: '#1D9E75', fontWeight: 700 }}>✓</span>}
                 </div>
-
                 {showDropdown && patientSearch.length > 0 && (
                   <div style={S.dropdown}>
-                    {filteredPatients.length === 0 ? (
-                      <div style={S.dropEmpty}>No patients found</div>
-                    ) : filteredPatients.map(p => (
-                      <div key={p.id} style={S.dropItem} onClick={() => selectPatient(p)}>
-                        <div style={S.dropName}>{p.name}</div>
-                        <div style={S.dropMeta}>{p.phone || 'No phone'} · {p.visit_count} visit{p.visit_count !== 1 ? 's' : ''}</div>
-                      </div>
-                    ))}
+                    {filteredPatients.length === 0
+                      ? <div style={S.dropEmpty}>No patients found</div>
+                      : filteredPatients.map(p => (
+                        <div key={p.id} style={S.dropItem} onClick={() => selectPatient(p)}>
+                          <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
+                          <div style={{ fontSize: 12, color: '#888' }}>{p.phone || 'No phone'} · {p.visit_count} visit{p.visit_count !== 1 ? 's' : ''}</div>
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
 
-              {/* Type selector */}
+              {/* Type */}
               <label style={S.label}>Type</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
                 {TYPES.map(t => (
                   <div key={t.key}
-                    style={{ ...S.typeCard, ...(form.type === t.key ? S.typeCardActive : {}) }}
-                    onClick={() => setForm(f => ({ ...f, type: t.key }))}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: form.type === t.key ? '#085041' : '#1a1a1a' }}>{t.label}</div>
+                    style={{ ...S.typeCard, ...(type === t.key ? S.typeCardActive : {}) }}
+                    onClick={() => setType(t.key)}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: type === t.key ? '#085041' : '#1a1a1a' }}>{t.label}</div>
                     <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>{t.desc}</div>
                   </div>
                 ))}
               </div>
 
               {/* Appointment date/time if type is appointment */}
-              {form.type === 'appointment' && (
+              {type === 'appointment' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
-                  <div style={{ minWidth: 0 }}>
+                  <div>
                     <label style={S.label}>Appointment date</label>
                     <input
-                      style={{ ...S.inp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                      style={S.inp}
                       type="date"
-                      value={form.appointment_date}
-                      onChange={e => setForm(f => ({ ...f, appointment_date: e.target.value }))}
+                      value={apptDate}
+                      onChange={e => setApptDate(e.target.value)}
                     />
                   </div>
-                  <div style={{ minWidth: 0 }}>
+                  <div>
                     <label style={S.label}>Time</label>
                     <input
-                      style={{ ...S.inp, width: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                      style={S.inp}
                       type="time"
-                      value={form.appointment_time}
-                      onChange={e => setForm(f => ({ ...f, appointment_time: e.target.value }))}
+                      value={apptTime}
+                      onChange={e => setApptTime(e.target.value)}
                     />
                   </div>
                 </div>
               )}
 
-              <label style={S.label}>Send at</label>
-              <input style={{ ...S.inp, marginBottom: 18 }} type="datetime-local"
-                value={new Date(form.scheduled_at).toISOString()}
-                onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))} required />
+              {/* Send at */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={S.label}>Send at</label>
+                <input
+                  style={S.inp}
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={e => setScheduledAt(e.target.value)}
+                  required
+                />
+                <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>
+                  Message will be sent at this time
+                </div>
+              </div>
 
-              <button style={S.submitBtn} disabled={saving}>
+              <button style={S.submitBtn} disabled={saving || !selectedPatient}>
                 {saving ? 'Scheduling...' : 'Schedule follow-up'}
               </button>
             </form>
@@ -248,26 +296,12 @@ export default function Followups() {
   );
 }
 
-function tomorrowAt7() {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  d.setHours(7, 0, 0, 0);
-  // Format as YYYY-MM-DDTHH:MM in LOCAL time (not UTC)
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true, });
-}
-
 const S = {
   toast: { position: 'fixed', top: 20, right: 20, background: '#1a1a1a', color: '#fff', padding: '12px 20px', borderRadius: 10, fontSize: 13, zIndex: 1000, fontWeight: 500 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   title: { fontSize: 24, fontWeight: 700, color: '#1a1a1a' },
   sub: { fontSize: 13, color: '#888', marginTop: 3 },
-  addBtn: { padding: '10px 18px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' },
+  addBtn: { padding: '10px 18px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer', flexShrink: 0 },
   tabs: { display: 'flex', gap: 6, marginBottom: 16 },
   tab: { padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)', background: '#fff', color: '#888', fontSize: 13, cursor: 'pointer' },
   tabActive: { background: '#E1F5EE', color: '#085041', borderColor: 'transparent', fontWeight: 600 },
@@ -275,28 +309,25 @@ const S = {
   empty: { padding: 24, textAlign: 'center', color: '#888', fontSize: 14 },
   row: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' },
   typeIcon: { width: 36, height: 36, borderRadius: '50%', background: '#FAEEDA', color: '#854F0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 },
-  info: { flex: 1 },
-  name: { fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 },
-  typeTag: { fontSize: 11, background: '#E1F5EE', color: '#085041', padding: '2px 8px', borderRadius: 20, fontWeight: 400 },
+  info: { flex: 1, minWidth: 0 },
+  name: { fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  typeTag: { fontSize: 11, background: '#E1F5EE', color: '#085041', padding: '2px 8px', borderRadius: 20 },
   meta: { fontSize: 12, color: '#888', marginTop: 2 },
-  sendBtn: { padding: '6px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
-  cancelBtn: { padding: '6px 14px', background: 'none', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, fontSize: 12, color: '#888', cursor: 'pointer' },
-  sentBadge: { fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#f0f0ee', color: '#888' },
+  sendBtn: { padding: '6px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
+  cancelBtn: { padding: '6px 14px', background: 'none', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, fontSize: 12, color: '#888', cursor: 'pointer', flexShrink: 0 },
+  sentBadge: { fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#E1F5EE', color: '#085041', flexShrink: 0 },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 },
   modal: { background: '#fff', borderRadius: 14, padding: 24, width: 460, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto' },
   modalHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   closeBtn: { background: 'none', border: 'none', fontSize: 18, color: '#aaa', cursor: 'pointer' },
   label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 6 },
-  searchWrap: { display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e8e8e5', borderRadius: 8, padding: '9px 12px', background: '#fff' },
-  searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#1a1a1a', background: 'transparent' },
-  selectedTick: { color: '#1D9E75', fontWeight: 700, fontSize: 14, flexShrink: 0 },
+  searchWrap: { display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid #e8e8e5', borderRadius: 8, padding: '10px 12px', background: '#fff', position: 'relative' },
+  searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: 14, color: '#1a1a1a', background: 'transparent', minWidth: 0 },
   dropdown: { position: 'absolute', left: 0, right: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 200, maxHeight: 220, overflowY: 'auto', marginTop: 4 },
   dropEmpty: { padding: '14px 16px', color: '#aaa', fontSize: 13, textAlign: 'center' },
-  dropItem: { padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f5f5f3', transition: 'background 0.1s' },
-  dropName: { fontSize: 14, fontWeight: 600, color: '#1a1a1a' },
-  dropMeta: { fontSize: 12, color: '#888', marginTop: 2 },
-  inp: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 14, outline: 'none', color: '#1a1a1a' },
-  typeCard: { border: '1.5px solid #e8e8e5', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', transition: 'all 0.15s' },
+  dropItem: { padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f5f5f3' },
+  inp: { width: '100%', padding: '10px 12px', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 14, outline: 'none', color: '#1a1a1a', boxSizing: 'border-box', background: '#fff', fontFamily: 'inherit' },
+  typeCard: { border: '1.5px solid #e8e8e5', borderRadius: 10, padding: '10px 12px', cursor: 'pointer' },
   typeCardActive: { borderColor: '#1D9E75', background: '#E1F5EE' },
   submitBtn: { width: '100%', padding: '12px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 14, cursor: 'pointer' },
 };
