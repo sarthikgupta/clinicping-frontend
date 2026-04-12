@@ -74,7 +74,7 @@ export default function Dashboard() {
       {/* Greeting */}
       <div style={S.greetRow}>
         <div>
-          <h1 style={S.greet}>{greeting()}, {user?.name?} 👋</h1>
+          <h1 style={S.greet}>{greeting()}, {user?.name} 👋</h1>
           <p style={S.date}>{todayDate} · {clinic?.name}</p>
         </div>
         <button style={S.editBtn} onClick={() => setEditing(e => !e)}>
