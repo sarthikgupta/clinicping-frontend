@@ -139,6 +139,7 @@ const [apptTime, setApptTime] = useState(() => {
 });
   const [apptNote, setApptNote] = useState('');
   const [focusLastMed, setFocusLastMed] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(false);
   const medRefs = useRef([]);
 
   const load = useCallback(async () => {
@@ -398,12 +399,17 @@ const [apptTime, setApptTime] = useState(() => {
                 <div style={S.formBody}>
                   {prev && (
                     <div style={S.sectionCard}>
-                      <div style={S.sectionHead}><ClockIcon /> Last visit — {new Date(prev.visit_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                      <div style={S.sectionBody}>
-                        {prev.diagnosis && (<><div style={S.prevLabel}>Diagnosis</div><div style={S.prevRecord}>{prev.diagnosis}</div></>)}
-                        {prev.medicines?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Medicines</div><div style={S.prevRecord}>{prev.medicines.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map(m => `${m.name}${m.dose ? ` — ${m.dose}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join(' · ')}</div></>)}
-                        {prev.tests_ordered?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Tests</div><div style={S.prevRecord}>{prev.tests_ordered.map(t => t.name).join(' · ')}</div></>)}
+                      <div style={{ ...S.sectionHead, cursor: 'pointer', justifyContent: 'space-between' }} onClick={() => setPrevOpen(o => !o)}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ClockIcon /> Last visit — {new Date(prev.visit_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        <span style={{ fontSize: 11, color: '#aaa' }}>{prevOpen ? '▲ hide' : '▼ show'}</span>
                       </div>
+                      {prevOpen && (
+                        <div style={S.sectionBody}>
+                          {prev.diagnosis && (<><div style={S.prevLabel}>Diagnosis</div><div style={S.prevRecord}>{prev.diagnosis}</div></>)}
+                          {prev.medicines?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Medicines</div><div style={S.prevRecord}>{prev.medicines.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map(m => `${m.name}${m.dose ? ` — ${m.dose}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join(' · ')}</div></>)}
+                          {prev.tests_ordered?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Tests</div><div style={S.prevRecord}>{prev.tests_ordered.map(t => t.name).join(' · ')}</div></>)}
+                        </div>
+                      )}
                     </div>
                   )}
 
