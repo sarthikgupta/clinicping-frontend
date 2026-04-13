@@ -127,8 +127,16 @@ export default function Doctor() {
   const [medicines, setMedicines] = useState([{ name: '', dose: '', duration: '' }]);
   const [tests, setTests] = useState([]);
   const [testInput, setTestInput] = useState('');
-  const [apptDate, setApptDate] = useState('');
-  const [apptTime, setApptTime] = useState('10:00');
+  const [apptDate, setApptDate] = useState(() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+});
+const [apptTime, setApptTime] = useState(() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+});
   const [apptNote, setApptNote] = useState('');
   const [focusLastMed, setFocusLastMed] = useState(false);
   const medRefs = useRef([]);

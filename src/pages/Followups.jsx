@@ -17,7 +17,7 @@ function toLocalInputString(date) {
 function defaultScheduleTime() {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  d.setHours(9, 0, 0, 0);
+  d.setHours(8, 0, 0, 0);
   return toLocalInputString(d);
 }
 
@@ -43,8 +43,16 @@ export default function Followups() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [type, setType] = useState('medicine');
   const [scheduledAt, setScheduledAt] = useState(defaultScheduleTime());
-  const [apptDate, setApptDate] = useState('');
-  const [apptTime, setApptTime] = useState('');
+const [apptDate, setApptDate] = useState(() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+});
+const [apptTime, setApptTime] = useState(() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+});
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const dropRef = useRef(null);
@@ -89,14 +97,17 @@ export default function Followups() {
   }
 
   function openModal() {
-    setModalOpen(true);
-    setSelectedPatient(null);
-    setPatientSearch('');
-    setType('medicine');
-    setScheduledAt(defaultScheduleTime());
-    setApptDate('');
-    setApptTime('');
-  }
+  setModalOpen(true);
+  setSelectedPatient(null);
+  setPatientSearch('');
+  setType('medicine');
+  setScheduledAt(toLocalInputString(new Date()));  // ← current time
+  // Reset appt fields to current date/time
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  setApptDate(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`);
+  setApptTime(`${pad(d.getHours())}:${pad(d.getMinutes())}`);
+}
 
   async function handleSchedule(e) {
     e.preventDefault();
