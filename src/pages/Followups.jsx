@@ -23,10 +23,8 @@ function defaultScheduleTime() {
 
 function fmtDate(d) {
   if (!d) return '—';
-  // If no timezone in string, append +05:30 so it's treated as IST not UTC
-  const dateStr = d.includes('T') && !d.includes('Z') && !d.includes('+') 
-    ? d + '+05:30' 
-    : d;
+  // If no timezone info, treat as IST
+  const dateStr = d.includes('Z') || d.includes('+') ? d : d + '+05:30';
   return new Date(dateStr).toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     day: 'numeric', month: 'short', year: 'numeric',
