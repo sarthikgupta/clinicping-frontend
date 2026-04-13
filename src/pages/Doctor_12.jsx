@@ -127,19 +127,10 @@ export default function Doctor() {
   const [medicines, setMedicines] = useState([{ name: '', dose: '', duration: '' }]);
   const [tests, setTests] = useState([]);
   const [testInput, setTestInput] = useState('');
-  const [apptDate, setApptDate] = useState(() => {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-});
-const [apptTime, setApptTime] = useState(() => {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-});
+  const [apptDate, setApptDate] = useState('');
+  const [apptTime, setApptTime] = useState('10:00');
   const [apptNote, setApptNote] = useState('');
   const [focusLastMed, setFocusLastMed] = useState(false);
-  const [prevOpen, setPrevOpen] = useState(false);
   const medRefs = useRef([]);
 
   const load = useCallback(async () => {
@@ -384,7 +375,7 @@ const [apptTime, setApptTime] = useState(() => {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {prev && <div style={S.prevBadge}>Last: {new Date(prev.visit_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>}
+                    {prev && <div style={S.prevBadge}>Last: {new Date(prev.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>}
                     {hasPhone && (
                       <div style={S.slipToggle} onClick={() => setSendSlip(s => !s)} title="Send prescription to patient's WhatsApp on save">
                         <div style={{ ...S.slipDot, background: sendSlip ? '#1D9E75' : '#ddd' }} />
@@ -399,17 +390,12 @@ const [apptTime, setApptTime] = useState(() => {
                 <div style={S.formBody}>
                   {prev && (
                     <div style={S.sectionCard}>
-                      <div style={{ ...S.sectionHead, cursor: 'pointer', justifyContent: 'space-between' }} onClick={() => setPrevOpen(o => !o)}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ClockIcon /> Last visit — {new Date(prev.visit_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                        <span style={{ fontSize: 11, color: '#888' }}>{prevOpen ? '▲ hide' : '▼ show'}</span>
+                      <div style={S.sectionHead}><ClockIcon /> Last visit — {new Date(prev.visit_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                      <div style={S.sectionBody}>
+                        {prev.diagnosis && (<><div style={S.prevLabel}>Diagnosis</div><div style={S.prevRecord}>{prev.diagnosis}</div></>)}
+                        {prev.medicines?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Medicines</div><div style={S.prevRecord}>{prev.medicines.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map(m => `${m.name}${m.dose ? ` — ${m.dose}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join(' · ')}</div></>)}
+                        {prev.tests_ordered?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Tests</div><div style={S.prevRecord}>{prev.tests_ordered.map(t => t.name).join(' · ')}</div></>)}
                       </div>
-                      {prevOpen && (
-                        <div style={S.sectionBody}>
-                          {prev.diagnosis && (<><div style={S.prevLabel}>Diagnosis</div><div style={S.prevRecord}>{prev.diagnosis}</div></>)}
-                          {prev.medicines?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Medicines</div><div style={S.prevRecord}>{prev.medicines.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map(m => `${m.name}${m.dose ? ` — ${m.dose}` : ''}${m.duration ? ` (${m.duration})` : ''}`).join(' · ')}</div></>)}
-                          {prev.tests_ordered?.length > 0 && (<><div style={{ ...S.prevLabel, marginTop: 10 }}>Tests</div><div style={S.prevRecord}>{prev.tests_ordered.map(t => t.name).join(' · ')}</div></>)}
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -564,7 +550,7 @@ const S = {
   headerStats: { display: 'flex', gap: 16 },
   hstat: { fontSize: 14, color: '#888' },
   emptyFull: { padding: '60px 0', textAlign: 'center' },
-  layout: { display: 'grid', gridTemplateColumns: '260px 1fr', gap: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden', minHeight: 600, alignItems: 'stretch' },
+  layout: { display: 'grid', gridTemplateColumns: '260px 1fr', gap: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden', minHeight: 600 },
   sidebar: { background: '#f8fffe', borderRight: '1px solid rgba(0,0,0,0.07)', overflowY: 'auto' },
   sidebarHead: { padding: '12px 16px', fontSize: 11, fontWeight: 600, color: '#888', borderBottom: '1px solid rgba(0,0,0,0.07)', textTransform: 'uppercase', letterSpacing: '0.04em' },
   ptItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.05)' },
@@ -577,7 +563,7 @@ const S = {
   nowBadge: { fontSize: 10, background: '#1D9E75', color: '#fff', padding: '2px 6px', borderRadius: 20, fontWeight: 600 },
   savedDot: { fontSize: 11, color: '#1D9E75', fontWeight: 700 },
   doneDivider: { padding: '6px 16px', fontSize: 11, color: '#aaa', fontWeight: 600, background: '#f0f0ee', textTransform: 'uppercase' },
-  main: { display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 },
+  main: { display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   mainHead: { padding: '14px 20px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', flexShrink: 0 },
   avatar: { width: 40, height: 40, borderRadius: '50%', background: '#E1F5EE', color: '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
   ptNameBig: { fontSize: 16, fontWeight: 700, color: '#1a1a1a' },
