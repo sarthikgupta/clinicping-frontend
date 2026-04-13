@@ -558,7 +558,7 @@ const S = {
   headerStats: { display: 'flex', gap: 16 },
   hstat: { fontSize: 14, color: '#888' },
   emptyFull: { padding: '60px 0', textAlign: 'center' },
-  layout: { display: 'grid', gridTemplateColumns: '260px 1fr', gap: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden', height: 'calc(100vh - 160px)' },
+  layout: { display: 'grid', gridTemplateColumns: '260px 1fr', gap: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden', minHeight: 600 },
   sidebar: { background: '#f8fffe', borderRight: '1px solid rgba(0,0,0,0.07)', overflowY: 'auto' },
   sidebarHead: { padding: '12px 16px', fontSize: 11, fontWeight: 600, color: '#888', borderBottom: '1px solid rgba(0,0,0,0.07)', textTransform: 'uppercase', letterSpacing: '0.04em' },
   ptItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.05)' },
