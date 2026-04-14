@@ -90,6 +90,7 @@ export default function Dashboard() {
             { label: 'Consulting', val: stats.consulting || 0, color: '#085041', bg: '#E1F5EE' },
             { label: 'Done today', val: stats.done || 0, color: '#185FA5', bg: '#E6F1FB' },
             { label: 'Total today', val: stats.total || 0, color: '#1a1a1a', bg: '#f5f5f3' },
+            { label: 'Cancelled', val: stats.cancelled || 0, color: '#A32D2D', bg: '#FCEBEB' },
           ].map(({ label, val, color, bg }) => (
             <div key={label} style={{ ...S.statCard, background: bg }}>
               <div style={{ ...S.statVal, color }}>{val}</div>
