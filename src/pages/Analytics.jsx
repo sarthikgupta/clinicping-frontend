@@ -48,6 +48,7 @@ export default function Analytics() {
             { label: 'Seen', val: today.done || 0, color: '#1D9E75' },
             { label: 'Waiting', val: today.waiting || 0, color: '#854F0B' },
             { label: 'Consulting', val: today.consulting || 0, color: '#085041' },
+            { label: 'Cancelled', val: today.cancelled || 0, color: '#A32D2D' },
           ].map(({ label, val, color }) => (
             <div key={label} style={S.todayStat}>
               <div style={{ ...S.todayVal, color }}>{val}</div>
@@ -87,6 +88,10 @@ export default function Analytics() {
                   <div style={S.drStat}>
                     <span style={{ fontSize: 18, fontWeight: 700, color: '#854F0B' }}>{dr.today.waiting}</span>
                     <span style={S.drStatLabel}>waiting</span>
+                  </div>
+                  <div style={S.drStat}>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: '#A32D2D' }}>{dr.today.cancelled || 0}</span>
+                    <span style={S.drStatLabel}>cancelled</span>
                   </div>
                   <div style={S.drStat}>
                     <span style={{ fontSize: 18, fontWeight: 700, color: '#888' }}>{dr.week}</span>
