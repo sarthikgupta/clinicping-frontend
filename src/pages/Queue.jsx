@@ -158,7 +158,7 @@ export default function Queue() {
 
   const activeQueue = queue.filter(t => !['done', 'cancelled'].includes(t.status));
   const doneQueue = queue.filter(t => t.status === 'done');
-  const cancelledCount = queue.filter(t => t.status === 'cancelled').length;
+  const cancelledCount = stats.cancelled || 0;
 
   // Group by doctor
   const queueByDoctor = {};
