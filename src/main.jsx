@@ -15,6 +15,7 @@ import Analytics from './pages/Analytics';
 import Doctor from './pages/Doctor';
 import Settings from './pages/Settings';
 import Layout from './components/Layout';
+import Billing from './pages/Billing';
 
 function PrivateRoute({ children }) {
   const token = useAuthStore(s => s.token);
@@ -36,6 +37,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="billing" element={<Billing />} />
 
         {/* ── App — requires login ── */}
         <Route element={<PrivateRoute><Layout /></PrivateRoute>}>

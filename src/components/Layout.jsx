@@ -15,6 +15,7 @@ export default function Layout() {
     { to: '/doctor', label: 'Doctor', icon: DoctorIcon, roles: ['admin', 'doctor'] },
     { to: '/analytics', label: 'Analytics', icon: AnalyticsIcon, roles: ['admin', 'doctor'] },
     { to: '/settings', label: 'Settings', icon: SettingsIcon, roles: ['admin', 'doctor', 'receptionist'] },
+    { to: '/billing', label: 'Billing', icon: BillingIcon, roles: ['admin'] },
   ].filter(item => item.roles.includes(role));
 
   const ROLE_BADGE = {

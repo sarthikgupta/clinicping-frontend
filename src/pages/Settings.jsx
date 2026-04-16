@@ -39,6 +39,7 @@ export default function Settings() {
   const allTabs = [
     { key: 'profile', label: 'My profile', roles: ['admin', 'doctor', 'receptionist'] },
     { key: 'password', label: 'Password', roles: ['admin', 'doctor', 'receptionist'] },
+    { key: 'billing', label: '💳 Plan & Billing', roles: ['admin'] },
     { key: 'clinic', label: 'Clinic', roles: ['admin'] },
     { key: 'rx', label: 'Prescription', roles: ['admin'] },
     { key: 'staff', label: 'Staff', roles: ['admin'] },
