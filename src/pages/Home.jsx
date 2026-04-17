@@ -116,12 +116,12 @@ export default function Home() {
       {/* Pricing */}
       <section style={{ padding: mobile ? '40px 5%' : '60px 5%', maxWidth: 900, margin: '0 auto' }}>
         <h2 style={{ fontSize: mobile ? 24 : 30, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 8 }}>Simple pricing</h2>
-        <p style={{ textAlign: 'center', color: '#888', fontSize: 14, marginBottom: 32 }}>Start free for 3 months. No setup fees.</p>
+        <p style={{ textAlign: 'center', color: '#888', fontSize: 14, marginBottom: 32 }}>Free forever with limits. Upgrade when you need more.</p>
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 14 }}>
           {[
-            { plan: 'Starter', price: '₹799', period: '/month', desc: '1 doctor · 100 patients/month · All features', hl: false },
-            { plan: 'Growth', price: '₹1,499', period: '/month', desc: 'Unlimited patients · 1 doctor · Priority support', hl: true },
-            { plan: 'Multi-doctor', price: '₹2,499', period: '/month', desc: 'Up to 5 doctors · Unlimited everything', hl: false },
+            { plan: 'Free', price: '₹0', period: '/forever', desc: '30 patients/month · 1 doctor · Prescription print', hl: false },
+            { plan: 'Growth', price: '₹799', period: '/month', desc: 'Unlimited patients · WhatsApp messages · Follow-ups', hl: true },
+            { plan: 'Clinic', price: '₹1,499', period: '/month', desc: 'Up to 3 doctors · Everything in Growth', hl: false },
           ].map(p => (
             <div key={p.plan} style={{ border: p.hl ? '2px solid #1D9E75' : '1.5px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '24px 20px', position: 'relative', background: p.hl ? '#f8fffe' : '#fff' }}>
               {p.hl && <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#1D9E75', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>Most popular</div>}

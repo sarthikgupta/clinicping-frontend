@@ -37,8 +37,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="billing" element={<Billing />} />
-
         {/* ── App — requires login ── */}
         <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -46,6 +44,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/patients" element={<Patients />} />
           <Route path="/followups" element={<Followups />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/billing" element={
+            <RoleRoute allow={['admin']}><Billing /></RoleRoute>
+          } />
           <Route path="/doctor" element={
             <RoleRoute allow={['doctor', 'admin']}><Doctor /></RoleRoute>
           } />
