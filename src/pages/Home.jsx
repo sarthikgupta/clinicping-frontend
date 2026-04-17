@@ -57,7 +57,7 @@ export default function Home() {
               Sign in
             </button>
           </div>
-          <div style={{ fontSize: 12, color: '#aaa' }}>Free for 3 months · Works on any device · Hindi WhatsApp messages</div>
+          <div style={{ fontSize: 12, color: '#aaa' }}>Free forever · Works on any device · Hindi WhatsApp messages</div>
         </div>
 
         {/* Mock card — hide on small mobile */}
