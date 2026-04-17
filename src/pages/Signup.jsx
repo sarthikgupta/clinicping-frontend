@@ -24,9 +24,7 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup({ clinic_name: form.clinic_name, name: form.name, email: form.email, phone: form.phone, password: form.password, city: form.city });
-      
-      
-      // In Login.jsx handleSubmit, after await doLogin(...)
+
       const u = useAuthStore.getState().user;
       if (u?.role === 'doctor') navigate('/doctor');
       else if (u?.role === 'receptionist') navigate('/queue');
@@ -46,7 +44,7 @@ export default function Signup() {
           <span style={S.logoText}>Clinic<span style={{ color: '#1D9E75' }}>Ping</span></span>
         </div>
         <h1 style={S.title}>Create your clinic</h1>
-        <p style={S.sub}>Free for 3 months · No credit card needed</p>
+        <p style={S.sub}>Free forever · No credit card needed</p>
         <div style={S.infoBanner}>You'll be the Admin. Add doctors and receptionists from Settings after signup.</div>
         {error && <div style={S.errorBox}>{error}</div>}
         <form onSubmit={handleSubmit}>
