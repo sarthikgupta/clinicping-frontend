@@ -1,19 +1,29 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../lib/api';
+import { useState, useEffect } from 'react';
+import { useAuthStore, api } from '../lib/api';
 
 export default function Layout() {
   const { user, clinic, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const role = user?.role || 'receptionist';
+  const [plan, setPlan] = useState('free');
+
+  useEffect(() => {
+    api.get('/api/billing/plan')
+      .then(r => setPlan(r.data.plan || 'free'))
+      .catch(() => setPlan('free'));
+  }, []);
+
+  const isFreePlan = plan === 'free';
 
   const NAV = [
     { to: '/dashboard', label: 'Home', icon: HomeIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/queue', label: 'Queue', icon: QueueIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/patients', label: 'Patients', icon: PatientsIcon, roles: ['admin', 'doctor', 'receptionist'] },
-    { to: '/followups', label: 'Follow-ups', icon: FollowupIcon, roles: ['admin', 'doctor', 'receptionist'] },
+    { to: '/followups', label: 'Follow-ups', icon: FollowupIcon, roles: ['admin', 'doctor', 'receptionist'], paidOnly: true },
     { to: '/doctor', label: 'Doctor', icon: DoctorIcon, roles: ['admin', 'doctor'] },
-    { to: '/analytics', label: 'Analytics', icon: AnalyticsIcon, roles: ['admin', 'doctor'] },
+    { to: '/analytics', label: 'Analytics', icon: AnalyticsIcon, roles: ['admin', 'doctor'], paidOnly: true },
     { to: '/settings', label: 'Settings', icon: SettingsIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/billing', label: 'Billing', icon: BillingIcon, roles: ['admin'] },
   ].filter(item => item.roles.includes(role));
@@ -50,12 +60,23 @@ export default function Layout() {
           </div>
         </div>
         <nav style={S.nav}>
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to}
-              style={({ isActive }) => ({ ...S.navItem, ...(isActive ? S.navActive : {}) })}>
-              <Icon /><span>{label}</span>
-            </NavLink>
-          ))}
+          {NAV.map(({ to, label, icon: Icon, paidOnly }) => {
+            const locked = paidOnly && isFreePlan;
+            return locked ? (
+              <div key={to} style={{ ...S.navItem, opacity: 0.4, cursor: 'not-allowed' }}
+                title="Upgrade to Growth plan to unlock"
+                onClick={() => navigate('/billing')}>
+                <Icon />
+                <span style={{ flex: 1 }}>{label}</span>
+                <LockIcon />
+              </div>
+            ) : (
+              <NavLink key={to} to={to}
+                style={({ isActive }) => ({ ...S.navItem, ...(isActive ? S.navActive : {}) })}>
+                <Icon /><span>{label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
         <button onClick={handleLogout} style={S.logoutBtn}>
           <LogoutIcon /> Logout
@@ -82,9 +103,16 @@ export default function Layout() {
 
       {/* Mobile bottom nav */}
       <nav className="cp-bottom-nav" style={S.bottomNav}>
-        {bottomNav.map(({ to, label, icon: Icon }) => {
+        {bottomNav.map(({ to, label, icon: Icon, paidOnly }) => {
           const isActive = location.pathname === to;
-          return (
+          const locked = paidOnly && isFreePlan;
+          return locked ? (
+            <div key={to} style={{ ...S.bottomNavItem, opacity: 0.4 }}
+              onClick={() => navigate('/billing')}>
+              <div style={{ color: '#aaa' }}><Icon /></div>
+              <div style={{ fontSize: 10, marginTop: 2, color: '#aaa' }}>{label} 🔒</div>
+            </div>
+          ) : (
             <NavLink key={to} to={to} style={S.bottomNavItem}>
               <div style={{ color: isActive ? '#1D9E75' : '#aaa' }}><Icon /></div>
               <div style={{ fontSize: 10, marginTop: 2, color: isActive ? '#1D9E75' : '#aaa', fontWeight: isActive ? 700 : 400 }}>{label}</div>
@@ -129,3 +157,4 @@ function DoctorIcon() { return <svg width="18" height="18" viewBox="0 0 16 16" f
 function SettingsIcon() { return <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.2" fill="none"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>; }
 function LogoutIcon() { return <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h3M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
 function BillingIcon() { return <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" fill="none"/><path d="M1 8h16" stroke="currentColor" strokeWidth="1.3"/><path d="M5 12h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>; }
+function LockIcon() { return <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="2" y="5" width="8" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none"/><path d="M4 5V3.5a2 2 0 014 0V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>; }
