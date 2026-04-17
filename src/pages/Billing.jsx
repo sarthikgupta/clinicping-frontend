@@ -130,8 +130,8 @@ export default function Billing() {
             </div>
           </div>
 
-          {/* Usage bar — only for free plan */}
-          {!isPaid && planData.patients_limit && (
+          {/* Usage bar */}
+          {planData.patients_limit && (
             <div style={{ marginTop: 14 }}>
               <div style={S.progressTrack}>
                 <div style={{
