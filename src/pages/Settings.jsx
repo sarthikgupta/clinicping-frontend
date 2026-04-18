@@ -64,7 +64,7 @@ export default function Settings() {
     ];
     if (isAdmin) {
       loads.push(api.get('/api/settings').then(r => setClinicForm(f => ({ ...f, ...r.data }))));
-      loads.push(api.get('/api/auth/users').then(r => setUsers(r.data)));
+      loads.push(api.get('/api/settings/users').then(r => setUsers(r.data)));
     }
     Promise.all(loads).catch(console.error).finally(() => setLoading(false));
   }, [isAdmin]);
@@ -109,7 +109,7 @@ export default function Settings() {
   async function addUser(e) {
     e.preventDefault(); setSaving(true);
     try {
-      const { data } = await api.post('/api/auth/users', newUser);
+      const { data } = await api.post('/api/settings/users', newUser);
       setUsers(u => [...u, data]);
       setNewUser({ name: '', username: '', email: '', password: '', role: 'receptionist', qualification: '', registration_no: '', speciality: '' });
       setShowAddUser(false);
