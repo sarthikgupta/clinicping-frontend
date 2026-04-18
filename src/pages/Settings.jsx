@@ -114,7 +114,9 @@ export default function Settings() {
       setNewUser({ name: '', username: '', email: '', password: '', role: 'receptionist', qualification: '', registration_no: '', speciality: '' });
       setShowAddUser(false);
       showToast(`${data.name} added`);
-    } catch (err) { showToast(err.response?.data?.error || 'Failed', 'error'); } finally { setSaving(false); }
+      } catch (err) { 
+    showToast(err.response?.data?.message || err.response?.data?.error || 'Failed', 'error'); 
+  }
   }
 
   async function toggleActive(u) {
