@@ -9,6 +9,12 @@ export default function Billing() {
   const [toast, setToast] = useState('');
 
   useEffect(() => {
+    // Load Razorpay script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
     api.get('/api/billing/plan')
       .then(r => setPlanData(r.data))
       .catch(console.error)
@@ -59,7 +65,7 @@ export default function Billing() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      showToast(err.response?.data?.error || 'Subscription not available. Use Pay once instead.');
+      showToast(err.response?.data?.error || 'Failed to initiate payment');
     } finally { setUpgrading(null); }
   }
 
@@ -89,8 +95,6 @@ export default function Billing() {
     <div style={S.page}>
       {toast && <div style={S.toast}>{toast}</div>}
 
-      {/* Load Razorpay script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <h1 style={S.title}>Plan & Billing</h1>
       <p style={S.sub}>Manage your ClinicPing subscription</p>
@@ -212,16 +216,15 @@ export default function Billing() {
                         style={{ ...S.upgradeBtn, opacity: upgrading === plan.id ? 0.7 : 1 }}
                         disabled={!!upgrading}
                         onClick={() => handleRazorpaySubscription(plan.id)}
-                        title="Auto-renews every month"
                       >
-                        {upgrading === plan.id ? 'Processing...' : '🔄 Subscribe — Auto monthly'}
+                        {upgrading === plan.id ? 'Processing...' : '💳 Pay with card / UPI'}
                       </button>
                       <button
                         style={{ ...S.upiBtn, opacity: upgrading === plan.id + '_upi' ? 0.7 : 1 }}
                         disabled={!!upgrading}
                         onClick={() => handleUPILink(plan.id)}
                       >
-                        {upgrading === plan.id + '_upi' ? 'Generating...' : '💳 Pay once — Card / UPI / NetBanking'}
+                        {upgrading === plan.id + '_upi' ? 'Generating...' : '🔗 Get UPI payment link'}
                       </button>
                     </div>
                   )}
