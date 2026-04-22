@@ -217,14 +217,14 @@ export default function Billing() {
                         disabled={!!upgrading}
                         onClick={() => handleRazorpaySubscription(plan.id)}
                       >
-                        {upgrading === plan.id ? 'Processing...' : '💳 Pay with card / UPI'}
+                        {upgrading === plan.id ? 'Processing...' : 'Subscribe — Auto monthly'}
                       </button>
                       <button
                         style={{ ...S.upiBtn, opacity: upgrading === plan.id + '_upi' ? 0.7 : 1 }}
                         disabled={!!upgrading}
                         onClick={() => handleUPILink(plan.id)}
                       >
-                        {upgrading === plan.id + '_upi' ? 'Generating...' : '🔗 Get UPI payment link'}
+                        {upgrading === plan.id + '_upi' ? 'Generating...' : '🔗 Get one-time payment link'}
                       </button>
                     </div>
                   )}
