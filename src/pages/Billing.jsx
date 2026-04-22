@@ -28,40 +28,6 @@ export default function Billing() {
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(''), 4000); }
 
-  async function handleRazorpaySubscription(planId) {
-    setUpgrading(planId);
-    try {
-      const { data } = await api.post('/api/billing/subscribe', { plan_id: planId });
-
-      const options = {
-        key: data.razorpay_key,
-        subscription_id: data.subscription_id,
-        name: 'ClinicPing',
-        description: `${planId === 'growth' ? 'Growth' : 'Clinic'} Plan — ₹${data.amount / 100}/month`,
-        image: 'https://clinicping.space/logo.png',
-        handler: async (response) => {
-          try {
-            await api.post('/api/billing/verify', {
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-              plan_id: planId,
-            });
-            showToast('Plan activated! ✓');
-            const r = await api.get('/api/billing/plan');
-            setPlanData(r.data);
-          } catch { showToast('Payment verification failed. Contact support.'); }
-        },
-        prefill: { name: user?.name, email: user?.email },
-        theme: { color: '#1D9E75' },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      showToast(err.response?.data?.error || 'Failed to initiate payment');
-    } finally { setUpgrading(null); }
-  }
 
   async function handleUPILink(planId) {
     setUpgrading(planId + '_upi');
@@ -89,8 +55,6 @@ export default function Billing() {
     <div style={S.page}>
       {toast && <div style={S.toast}>{toast}</div>}
 
-      {/* Load Razorpay script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js" />
 
       <h1 style={S.title}>Plan & Billing</h1>
       <p style={S.sub}>Manage your ClinicPing subscription</p>
@@ -130,8 +94,8 @@ export default function Billing() {
             </div>
           </div>
 
-          {/* Usage bar */}
-          {planData.patients_limit && (
+          {/* Usage bar — only for free plan */}
+          {!isPaid && planData.patients_limit && (
             <div style={{ marginTop: 14 }}>
               <div style={S.progressTrack}>
                 <div style={{
@@ -207,22 +171,13 @@ export default function Billing() {
                   </div>
 
                   {!isCurrent && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <button
-                        style={{ ...S.upgradeBtn, opacity: upgrading === plan.id ? 0.7 : 1 }}
-                        disabled={!!upgrading}
-                        onClick={() => handleRazorpaySubscription(plan.id)}
-                      >
-                        {upgrading === plan.id ? 'Processing...' : '💳 Pay with card / UPI'}
-                      </button>
-                      <button
-                        style={{ ...S.upiBtn, opacity: upgrading === plan.id + '_upi' ? 0.7 : 1 }}
-                        disabled={!!upgrading}
-                        onClick={() => handleUPILink(plan.id)}
-                      >
-                        {upgrading === plan.id + '_upi' ? 'Generating...' : '🔗 Get UPI payment link'}
-                      </button>
-                    </div>
+                    <button
+                      style={{ ...S.upgradeBtn, opacity: upgrading === plan.id + '_upi' ? 0.7 : 1 }}
+                      disabled={!!upgrading}
+                      onClick={() => handleUPILink(plan.id)}
+                    >
+                      {upgrading === plan.id + '_upi' ? 'Generating link...' : '💳 Pay — Card / UPI / NetBanking'}
+                    </button>
                   )}
                 </div>
               );
