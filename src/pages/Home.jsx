@@ -165,11 +165,11 @@ export default function Home() {
             },
             {
               q: 'Can I print prescriptions?',
-              a: 'Yes. ClinicPing has 3 prescription templates — Classic, Modern, and Minimal. You can print directly or send the prescription slip to the patient\'s WhatsApp.'
+              a: "Yes. ClinicPing has 3 prescription templates — Classic, Modern, and Minimal. You can print directly or send the prescription slip to the patient's WhatsApp."
             },
             {
               q: 'What if I face any issue?',
-              a: 'WhatsApp us directly at +91 98780 50904. We're based in Nabha, Punjab and respond same day.'
+              a: "WhatsApp us directly at +91 98780 50904. We're based in Nabha, Punjab and respond same day."
             },
             {
               q: 'Can I cancel anytime?',
