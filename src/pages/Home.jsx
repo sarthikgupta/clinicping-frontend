@@ -165,7 +165,7 @@ export default function Home() {
             },
             {
               q: 'Can I print prescriptions?',
-              a: 'Yes. ClinicPing has 3 prescription templates — Classic, Modern, and Minimal. You can print directly or send the prescription slip to the patient's WhatsApp.'
+              a: 'Yes. ClinicPing has 3 prescription templates — Classic, Modern, and Minimal. You can print directly or send the prescription slip to the patient\'s WhatsApp.'
             },
             {
               q: 'What if I face any issue?',
