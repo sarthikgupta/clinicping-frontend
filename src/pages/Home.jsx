@@ -1,6 +1,6 @@
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../lib/api';
-import { useEffect, useState } from 'react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export default function Home() {
               Sign in
             </button>
           </div>
-          <div style={{ fontSize: 12, color: '#aaa' }}>Free forever · Works on any device · Hindi WhatsApp messages</div>
+          <div style={{ fontSize: 12, color: '#aaa' }}>Free for 3 months · Works on any device · Hindi WhatsApp messages</div>
         </div>
 
         {/* Mock card — hide on small mobile */}
@@ -119,9 +119,9 @@ export default function Home() {
         <p style={{ textAlign: 'center', color: '#888', fontSize: 14, marginBottom: 32 }}>Free forever with limits. Upgrade when you need more.</p>
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 14 }}>
           {[
-            { plan: 'Free', price: '₹0', period: '/forever', desc: '30 patients/month · 1 doctor · Prescription print', hl: false },
-            { plan: 'Growth', price: '₹799', period: '/month', desc: 'Unlimited patients · WhatsApp messages · Follow-ups', hl: true },
-            { plan: 'Clinic', price: '₹1,499', period: '/month', desc: 'Up to 3 doctors · Everything in Growth', hl: false },
+            { plan: 'Free', price: '₹0', period: '/forever', desc: '30 patients/month · 1 doctor · Prescription print · No WhatsApp', hl: false },
+            { plan: 'Growth', price: '₹799', period: '/month', desc: 'Unlimited patients · WhatsApp messages · Follow-ups · 1 doctor', hl: true },
+            { plan: 'Clinic', price: '₹1,499', period: '/month', desc: 'Everything in Growth · Up to 3 doctors', hl: false },
           ].map(p => (
             <div key={p.plan} style={{ border: p.hl ? '2px solid #1D9E75' : '1.5px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '24px 20px', position: 'relative', background: p.hl ? '#f8fffe' : '#fff' }}>
               {p.hl && <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#1D9E75', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>Most popular</div>}
@@ -132,6 +132,51 @@ export default function Home() {
                 Get started free
               </button>
             </div>
+          ))}
+        </div>
+      </section>
+
+
+      {/* FAQ */}
+      <section style={{ padding: mobile ? '40px 5%' : '60px 5%', background: '#f7f7f5' }}>
+        <h2 style={{ fontSize: mobile ? 24 : 30, fontWeight: 800, color: '#1a1a1a', textAlign: 'center', marginBottom: 8 }}>Frequently asked questions</h2>
+        <p style={{ textAlign: 'center', color: '#888', fontSize: 14, marginBottom: 36 }}>Still have questions? WhatsApp us at +91 98780 50904</p>
+        <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[
+            {
+              q: 'Do patients need to download any app?',
+              a: 'No. Patients receive their token number and updates directly on WhatsApp. No app download, no registration needed.'
+            },
+            {
+              q: 'How does the token system work?',
+              a: 'Receptionist adds a patient → token number is auto-assigned → patient gets a WhatsApp message with their token and estimated wait time. When their turn comes, they get a call-in message.'
+            },
+            {
+              q: 'Can multiple doctors use it at the same time?',
+              a: 'Yes. Each doctor has their own independent queue. Receptionist assigns patients to specific doctors when adding them to the queue.'
+            },
+            {
+              q: 'What happens after the free limit of 30 patients?',
+              a: 'New patients cannot be added until you upgrade or the next month begins. Existing patients and consultations are not affected.'
+            },
+            {
+              q: 'Is my patient data safe?',
+              a: 'Yes. Data is stored securely on Supabase (PostgreSQL) with row-level security. Each clinic can only see their own data.'
+            },
+            {
+              q: 'Can I print prescriptions?',
+              a: 'Yes. ClinicPing has 3 prescription templates — Classic, Modern, and Minimal. You can print directly or send the prescription slip to the patient's WhatsApp.'
+            },
+            {
+              q: 'What if I face any issue?',
+              a: 'WhatsApp us directly at +91 98780 50904. We're based in Nabha, Punjab and respond same day.'
+            },
+            {
+              q: 'Can I cancel anytime?',
+              a: 'Yes. No lock-in, no cancellation fee. Your data remains accessible even after cancellation.'
+            },
+          ].map((item, i) => (
+            <FaqItem key={i} q={item.q} a={item.a} />
           ))}
         </div>
       </section>
@@ -148,6 +193,24 @@ export default function Home() {
           <button style={{ background: 'none', border: 'none', fontSize: 13, color: '#888', cursor: 'pointer' }} onClick={() => navigate('/signup')}>Sign up</button>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 12 }}
+      >
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', lineHeight: 1.4 }}>{q}</span>
+        <span style={{ fontSize: 18, color: '#1D9E75', flexShrink: 0, fontWeight: 300 }}>{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 20px 16px', fontSize: 14, color: '#555', lineHeight: 1.65 }}>{a}</div>
+      )}
     </div>
   );
 }
