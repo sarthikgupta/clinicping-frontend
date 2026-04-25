@@ -137,7 +137,7 @@ export default function Settings() {
       <p style={S.sub}>{user?.name} · <span style={{ textTransform: 'capitalize' }}>{user?.role}</span></p>
 
       {/* Tabs — scrollable on mobile */}
-      <div style={S.tabs}>
+      <div style={S.tabs} className='cp-settings-tabs'>
         {tabs.map(t => (
           <button key={t.key} style={{ ...S.tab, ...(tab === t.key ? S.tabActive : {}) }} onClick={() => setTab(t.key)}>
             {t.label}

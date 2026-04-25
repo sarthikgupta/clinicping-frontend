@@ -249,7 +249,7 @@ export default function Billing() {
 }
 
 const S = {
-  page: { maxWidth: 700 },
+  page: { maxWidth: 700, width: '100%' },
   toast: { position: 'fixed', top: 20, right: 20, background: '#1a1a1a', color: '#fff', padding: '12px 20px', borderRadius: 10, fontSize: 13, zIndex: 1000 },
   title: { fontSize: 24, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 },
   sub: { fontSize: 13, color: '#888', marginBottom: 20 },
@@ -261,7 +261,7 @@ const S = {
   limitAlert: { marginTop: 10, padding: '10px 14px', background: '#FCEBEB', color: '#A32D2D', borderRadius: 8, fontSize: 13, lineHeight: 1.5 },
   featureChip: { fontSize: 12, background: '#f5f5f3', padding: '4px 12px', borderRadius: 20, color: '#555' },
   sectionTitle: { fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 14 },
-  plansGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 },
+  plansGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14, marginBottom: 16 },
   planCard: { background: '#fff', border: '1.5px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '20px 18px', position: 'relative' },
   planCardCurrent: { borderColor: '#1D9E75', background: '#f8fffe' },
   currentBadge: { position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: '#1D9E75', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 14px', borderRadius: 20, whiteSpace: 'nowrap' },

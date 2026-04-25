@@ -114,6 +114,8 @@ const DP = {
 // ── Main Doctor component ─────────────────────────────────────────────────────
 export default function Doctor() {
   const { clinic,user } = useAuthStore();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showMobileList, setShowMobileList] = useState(false);
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -141,6 +143,12 @@ const [apptTime, setApptTime] = useState(() => {
   const [focusLastMed, setFocusLastMed] = useState(false);
   const [prevOpen, setPrevOpen] = useState(false);
   const medRefs = useRef([]);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -341,7 +349,7 @@ const [apptTime, setApptTime] = useState(() => {
           <div style={S.emptyFull}><p style={{ color: '#888' }}>No patients today.</p><p style={{ color: '#aaa', fontSize: 13, marginTop: 6 }}>Add from Queue tab.</p></div>
         ) : (
           <div style={S.layout}>
-            <div style={S.sidebar}>
+            {!isMobile && <div style={S.sidebar}>
               <div style={S.sidebarHead}>Today's patients</div>
               {activePts.map(pt => {
                 const isSel = selected?.id === pt.id;
@@ -369,8 +377,39 @@ const [apptTime, setApptTime] = useState(() => {
               ))}
             </div>
 
+            </div>}
             {selected ? (
               <div style={S.main}>
+                {isMobile && (
+                  <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#f8fffe' }}>
+                    <button
+                      onClick={() => setShowMobileList(s => !s)}
+                      style={{ width: '100%', padding: '10px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, color: '#085041', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <span>👤 {selected ? selected.patients?.name : 'Select patient'}</span>
+                      <span>{showMobileList ? '▲' : '▼'}</span>
+                    </button>
+                    {showMobileList && (
+                      <div style={{ marginTop: 8, border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+                        {activePts.map(pt => (
+                          <div key={pt.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0ee', cursor: 'pointer', background: selected?.id === pt.id ? '#E1F5EE' : '#fff', display: 'flex', alignItems: 'center', gap: 10 }}
+                            onClick={() => { selectPatient(pt); setShowMobileList(false); }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: pt.status === 'consulting' ? '#1D9E75' : '#E1F5EE', color: pt.status === 'consulting' ? '#fff' : '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{pt.token_number}</div>
+                            <span style={{ fontSize: 13, fontWeight: 600 }}>{pt.patients?.name}</span>
+                            {pt.status === 'consulting' && <span style={{ fontSize: 10, background: '#1D9E75', color: '#fff', padding: '2px 6px', borderRadius: 10, marginLeft: 'auto' }}>Now</span>}
+                          </div>
+                        ))}
+                        {donePts.map(pt => (
+                          <div key={pt.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0ee', cursor: 'pointer', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 10 }}
+                            onClick={() => { selectPatient(pt); setShowMobileList(false); }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f0f0ee', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
+                            <span style={{ fontSize: 13 }}>{pt.patients?.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div style={S.mainHead}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={S.avatar}>{selected.patients?.name?.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
@@ -489,7 +528,7 @@ const [apptTime, setApptTime] = useState(() => {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10 }}>
                         <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Date</label>
                           <input
@@ -595,8 +634,8 @@ const S = {
   inp: { width: '100%', padding: '9px 11px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, color: '#1a1a1a', outline: 'none', resize: 'vertical', fontFamily: 'inherit' },
   medHeader: { display: 'flex', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f0f0ee' },
   colLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' },
-  medRow: { display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 },
-  medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%' },
+  medRow: { display: 'flex', gap: 6, alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap' },
+  medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%', minWidth: 0 },
   medHint: { fontSize: 11, color: '#aaa', marginBottom: 8, lineHeight: 1.5 },
   removeBtn: { background: 'none', border: '1px solid #e8e8e5', borderRadius: 6, color: '#ccc', padding: '7px', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0, marginTop: 1 },
   addRowBtn: { fontSize: 13, color: '#1D9E75', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: '2px 0' },

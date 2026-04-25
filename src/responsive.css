@@ -1,11 +1,11 @@
-/* ClinicPing — Responsive CSS */
+/* ClinicPing — Responsive CSS v2 */
 
 /* ── SIDEBAR: hide on mobile ── */
 @media (max-width: 768px) {
   .cp-sidebar { display: none !important; }
   .cp-mobile-header { display: flex !important; }
   .cp-bottom-nav { display: flex !important; }
-  .cp-main { padding: 70px 14px 80px !important; }
+  .cp-main { padding: 70px 12px 90px !important; }
 }
 
 /* ── TABLET: narrower sidebar ── */
@@ -14,20 +14,43 @@
   .cp-main { padding: 20px 16px !important; }
 }
 
-/* ── STATS GRID ── */
-@media (max-width: 600px) {
-  .cp-stats-row { grid-template-columns: repeat(3, 1fr) !important; }
-}
-
-/* ── METRICS GRID ── */
-@media (max-width: 600px) {
-  .cp-metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
-}
-
-/* ── DOCTOR LAYOUT: stack on mobile ── */
+/* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 @media (max-width: 768px) {
-  .cp-doctor-layout { grid-template-columns: 1fr !important; min-height: unset !important; }
+  .cp-main input,
+  .cp-main textarea,
+  .cp-main select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── DOCTOR LAYOUT: full width on mobile ── */
+@media (max-width: 768px) {
+  .cp-doctor-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: unset !important;
+  }
   .cp-doctor-sidebar { display: none !important; }
+  .cp-doctor-main {
+    width: 100% !important;
+    min-height: 100vh !important;
+  }
+}
+
+/* ── SETTINGS TABS: scroll horizontally ── */
+@media (max-width: 600px) {
+  .cp-settings-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px !important;
+  }
+  .cp-settings-tabs::-webkit-scrollbar { display: none; }
+  .cp-settings-tabs button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
 }
 
 /* ── MODAL: slide up on mobile ── */
@@ -37,7 +60,8 @@
     width: 100% !important;
     max-width: 100% !important;
     border-radius: 16px 16px 0 0 !important;
-    max-height: 85vh !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
   }
 }
 
@@ -61,3 +85,7 @@
 button { touch-action: manipulation; }
 * { -webkit-tap-highlight-color: transparent; }
 
+/* ── BOTTOM PAD ── */
+@media (max-width: 768px) {
+  .cp-bottom-pad { height: 80px; display: block; }
+}
