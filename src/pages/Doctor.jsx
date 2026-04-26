@@ -144,12 +144,6 @@ const [apptTime, setApptTime] = useState(() => {
   const [prevOpen, setPrevOpen] = useState(false);
   const medRefs = useRef([]);
 
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-
   const load = useCallback(async () => {
     try {
       const { data } = await api.get('/api/consultations/today');
@@ -159,6 +153,12 @@ const [apptTime, setApptTime] = useState(() => {
   }, []);
 
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   useEffect(() => {
     api.get('/api/settings').then(r => setClinicSettings(r.data)).catch(console.error);
@@ -349,45 +349,43 @@ const [apptTime, setApptTime] = useState(() => {
           <div style={S.emptyFull}><p style={{ color: '#888' }}>No patients today.</p><p style={{ color: '#aaa', fontSize: 13, marginTop: 6 }}>Add from Queue tab.</p></div>
         ) : (
           <div style={S.layout}>
-            {!isMobile && <div style={S.sidebar}>
-              <div style={S.sidebarHead}>Today's patients</div>
-              {activePts.map(pt => {
-                const isSel = selected?.id === pt.id;
-                const isCons = pt.status === 'consulting';
-                return (
-                  <div key={pt.id} style={{ ...S.ptItem, ...(isSel ? S.ptItemActive : {}), ...(isCons ? S.ptItemConsulting : {}) }} onClick={() => selectPatient(pt)}>
-                    <div style={{ ...S.ptNum, background: isCons ? '#1D9E75' : '#E1F5EE', color: isCons ? '#fff' : '#085041' }}>{pt.token_number}</div>
-                    <div style={S.ptInfo}>
-                      <div style={S.ptName}>{pt.patients?.name}</div>
-                      <div style={S.ptMeta}>{pt.reason || 'General'}{pt.patients?.visit_count > 1 && ` · ${pt.patients.visit_count}v`}</div>
+            {!isMobile && (
+              <div style={S.sidebar}>
+                <div style={S.sidebarHead}>Today's patients</div>
+                {activePts.map(pt => {
+                  const isSel = selected?.id === pt.id;
+                  const isCons = pt.status === 'consulting';
+                  return (
+                    <div key={pt.id} style={{ ...S.ptItem, ...(isSel ? S.ptItemActive : {}), ...(isCons ? S.ptItemConsulting : {}) }} onClick={() => selectPatient(pt)}>
+                      <div style={{ ...S.ptNum, background: isCons ? '#1D9E75' : '#E1F5EE', color: isCons ? '#fff' : '#085041' }}>{pt.token_number}</div>
+                      <div style={S.ptInfo}>
+                        <div style={S.ptName}>{pt.patients?.name}</div>
+                        <div style={S.ptMeta}>{pt.reason || 'General'}{pt.patients?.visit_count > 1 && ` · ${pt.patients.visit_count}v`}</div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                        {isCons && <span style={S.nowBadge}>Now</span>}
+                        {pt.todayConsultation && <span style={S.savedDot}>✓</span>}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                      {isCons && <span style={S.nowBadge}>Now</span>}
-                      {pt.todayConsultation && <span style={S.savedDot}>✓</span>}
-                    </div>
+                  );
+                })}
+                {donePts.length > 0 && <div style={S.doneDivider}>Done ({donePts.length})</div>}
+                {donePts.map(pt => (
+                  <div key={pt.id} style={{ ...S.ptItem, opacity: 0.5 }} onClick={() => selectPatient(pt)}>
+                    <div style={{ ...S.ptNum, background: '#f0f0ee', color: '#888' }}>✓</div>
+                    <div style={S.ptInfo}><div style={S.ptName}>{pt.patients?.name}</div><div style={S.ptMeta}>{pt.reason || 'General'}</div></div>
                   </div>
-                );
-              })}
-              {donePts.length > 0 && <div style={S.doneDivider}>Done ({donePts.length})</div>}
-              {donePts.map(pt => (
-                <div key={pt.id} style={{ ...S.ptItem, opacity: 0.5 }} onClick={() => selectPatient(pt)}>
-                  <div style={{ ...S.ptNum, background: '#f0f0ee', color: '#888' }}>✓</div>
-                  <div style={S.ptInfo}><div style={S.ptName}>{pt.patients?.name}</div><div style={S.ptMeta}>{pt.reason || 'General'}</div></div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            </div>
-            }
             {selected ? (
               <div style={S.main}>
                 {isMobile && (
                   <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#f8fffe' }}>
-                    <button
-                      onClick={() => setShowMobileList(s => !s)}
-                      style={{ width: '100%', padding: '10px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, color: '#085041', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                      <span>👤 {selected ? selected.patients?.name : 'Select patient'}</span>
+                    <button onClick={() => setShowMobileList(s => !s)}
+                      style={{ width: '100%', padding: '10px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, color: '#085041', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{'👤 '}{selected ? selected.patients?.name : 'Select patient'}</span>
                       <span>{showMobileList ? '▲' : '▼'}</span>
                     </button>
                     {showMobileList && (
@@ -401,7 +399,7 @@ const [apptTime, setApptTime] = useState(() => {
                           </div>
                         ))}
                         {donePts.map(pt => (
-                          <div key={pt.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0ee', cursor: 'pointer', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 10 }}
+                          <div key={pt.id} style={{ padding: '10px 14px', cursor: 'pointer', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 10 }}
                             onClick={() => { selectPatient(pt); setShowMobileList(false); }}>
                             <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f0f0ee', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
                             <span style={{ fontSize: 13 }}>{pt.patients?.name}</span>
@@ -635,7 +633,7 @@ const S = {
   inp: { width: '100%', padding: '9px 11px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, color: '#1a1a1a', outline: 'none', resize: 'vertical', fontFamily: 'inherit' },
   medHeader: { display: 'flex', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f0f0ee' },
   colLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' },
-  medRow: { display: 'flex', gap: 6, alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap' },
+  medRow: { display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 },
   medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%', minWidth: 0 },
   medHint: { fontSize: 11, color: '#aaa', marginBottom: 8, lineHeight: 1.5 },
   removeBtn: { background: 'none', border: '1px solid #e8e8e5', borderRadius: 6, color: '#ccc', padding: '7px', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0, marginTop: 1 },
