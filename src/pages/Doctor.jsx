@@ -377,7 +377,8 @@ const [apptTime, setApptTime] = useState(() => {
               ))}
             </div>
 
-            </div>}
+            </div>
+            }
             {selected ? (
               <div style={S.main}>
                 {isMobile && (
