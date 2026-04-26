@@ -153,11 +153,10 @@ const [apptTime, setApptTime] = useState(() => {
   }, []);
 
   useEffect(() => { load(); const t = setInterval(load, 10000); return () => clearInterval(t); }, [load]);
-
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
+    const fn = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
   }, []);
 
   useEffect(() => {
@@ -348,7 +347,7 @@ const [apptTime, setApptTime] = useState(() => {
         : patients.length === 0 ? (
           <div style={S.emptyFull}><p style={{ color: '#888' }}>No patients today.</p><p style={{ color: '#aaa', fontSize: 13, marginTop: 6 }}>Add from Queue tab.</p></div>
         ) : (
-          <div style={S.layout}>
+          <div style={isMobile ? S.layoutMobile : S.layout}>
             {!isMobile && (
               <div style={S.sidebar}>
                 <div style={S.sidebarHead}>Today's patients</div>
@@ -382,27 +381,36 @@ const [apptTime, setApptTime] = useState(() => {
             {selected ? (
               <div style={S.main}>
                 {isMobile && (
-                  <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#f8fffe' }}>
-                    <button onClick={() => setShowMobileList(s => !s)}
-                      style={{ width: '100%', padding: '10px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, color: '#085041', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{'👤 '}{selected ? selected.patients?.name : 'Select patient'}</span>
-                      <span>{showMobileList ? '▲' : '▼'}</span>
+                  <div style={S.mobilePatientBar}>
+                    <button style={S.mobilePatientBtn} onClick={() => setShowMobileList(o => !o)}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1D9E75', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                          {selected.token_number}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{selected.patients?.name}</div>
+                          <div style={{ fontSize: 11, color: '#888' }}>{selected.reason || 'General'} · {activePts.length + donePts.length} patients today</div>
+                        </div>
+                      </div>
+                      <span style={{ color: '#1D9E75', fontSize: 12 }}>{showMobileList ? '▲' : '▼ Switch'}</span>
                     </button>
                     {showMobileList && (
-                      <div style={{ marginTop: 8, border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+                      <div style={S.mobilePatientList}>
                         {activePts.map(pt => (
-                          <div key={pt.id} style={{ padding: '10px 14px', borderBottom: '1px solid #f0f0ee', cursor: 'pointer', background: selected?.id === pt.id ? '#E1F5EE' : '#fff', display: 'flex', alignItems: 'center', gap: 10 }}
+                          <div key={pt.id} style={{ ...S.mobilePatientItem, background: selected?.id === pt.id ? '#E1F5EE' : '#fff' }}
                             onClick={() => { selectPatient(pt); setShowMobileList(false); }}>
-                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: pt.status === 'consulting' ? '#1D9E75' : '#E1F5EE', color: pt.status === 'consulting' ? '#fff' : '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{pt.token_number}</div>
-                            <span style={{ fontSize: 13, fontWeight: 600 }}>{pt.patients?.name}</span>
-                            {pt.status === 'consulting' && <span style={{ fontSize: 10, background: '#1D9E75', color: '#fff', padding: '2px 6px', borderRadius: 10, marginLeft: 'auto' }}>Now</span>}
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: pt.status === 'consulting' ? '#1D9E75' : '#f0f0ee', color: pt.status === 'consulting' ? '#fff' : '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{pt.token_number}</div>
+                            <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{pt.patients?.name}</span>
+                            <span style={{ fontSize: 11, color: '#888' }}>{pt.reason || 'General'}</span>
+                            {pt.status === 'consulting' && <span style={{ fontSize: 10, background: '#1D9E75', color: '#fff', padding: '2px 7px', borderRadius: 10, fontWeight: 600 }}>Now</span>}
                           </div>
                         ))}
+                        {donePts.length > 0 && <div style={{ padding: '6px 12px', fontSize: 10, color: '#aaa', fontWeight: 600, textTransform: 'uppercase', background: '#f5f5f3' }}>Done</div>}
                         {donePts.map(pt => (
-                          <div key={pt.id} style={{ padding: '10px 14px', cursor: 'pointer', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 10 }}
+                          <div key={pt.id} style={{ ...S.mobilePatientItem, opacity: 0.5 }}
                             onClick={() => { selectPatient(pt); setShowMobileList(false); }}>
-                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f0f0ee', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
-                            <span style={{ fontSize: 13 }}>{pt.patients?.name}</span>
+                            <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#f0f0ee', color: '#888', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>✓</div>
+                            <span style={{ fontSize: 13, flex: 1 }}>{pt.patients?.name}</span>
                           </div>
                         ))}
                       </div>
@@ -465,40 +473,40 @@ const [apptTime, setApptTime] = useState(() => {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><PillIcon /> Medicines Prescribed</div>
                     <div style={S.sectionBody}>
-                      <div style={{ ...S.medHeader, display: isMobile ? 'none' : 'flex' }}>
+                      <div style={S.medHeader}>
                         <span style={{ flex: 2, ...S.colLabel }}>Medicine</span>
                         <span style={{ flex: 1, ...S.colLabel }}>Dose (M·A·E·N)</span>
                         <span style={{ flex: 1, ...S.colLabel }}>Duration</span>
                         <span style={{ width: 28 }} />
                       </div>
                       {medicines.map((med, i) => (
-                        <div key={i} style={isMobile ? S.medRowMobile : S.medRow}>
+                        <div key={i} style={isMobile ? S.medCardMobile : S.medRow}>
                           {isMobile ? (
                             <>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                                 <input
                                   ref={el => { medRefs.current[i] = el; }}
-                                  style={{ ...S.medInp, flex: 1, fontSize: 14 }}
+                                  style={{ ...S.medInp, flex: 1, fontSize: 15 }}
                                   placeholder="Medicine Name"
                                   value={med.name}
                                   onChange={e => updateMed(i, 'name', e.target.value)}
                                   onKeyDown={e => handleMedKeyDown(e, i, 'name')}
                                 />
                                 {medicines.length > 1 && (
-                                  <button style={{ ...S.removeBtn, flexShrink: 0 }} onClick={() => removeMed(i)} tabIndex={-1}>
+                                  <button style={{ ...S.removeBtn, marginTop: 0 }} onClick={() => removeMed(i)} tabIndex={-1}>
                                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                                   </button>
                                 )}
                               </div>
-                              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600, letterSpacing: '0.04em' }}>DOSE</div>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 10, color: '#aaa', fontWeight: 600, marginBottom: 4, letterSpacing: '0.05em' }}>DOSE (M·A·E·N)</div>
                                   <DosePicker value={med.dose} onChange={val => updateMed(i, 'dose', val)} />
                                 </div>
-                                <div style={{ width: 100, flexShrink: 0 }}>
-                                  <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600, letterSpacing: '0.04em' }}>DURATION</div>
+                                <div style={{ width: 96, flexShrink: 0 }}>
+                                  <div style={{ fontSize: 10, color: '#aaa', fontWeight: 600, marginBottom: 4, letterSpacing: '0.05em' }}>DURATION</div>
                                   <input
-                                    style={{ ...S.medInp, width: '100%', boxSizing: 'border-box', fontSize: 13 }}
+                                    style={{ ...S.medInp, width: '100%', boxSizing: 'border-box', padding: '8px 10px' }}
                                     placeholder="30 days"
                                     value={med.duration}
                                     onChange={e => updateMed(i, 'duration', e.target.value)}
@@ -538,7 +546,7 @@ const [apptTime, setApptTime] = useState(() => {
                           )}
                         </div>
                       ))}
-                                            <div style={S.medHint}>M = Morning · A = Afternoon · E = Evening · N = Night · Press ✎ to type custom</div>
+                      <div style={S.medHint}>M = Morning · A = Afternoon · E = Evening · N = Night · Press ✎ to type custom</div>
                       <button style={S.addRowBtn} onClick={addMedRow}>+ Add medicine</button>
                     </div>
                   </div>
@@ -563,7 +571,7 @@ const [apptTime, setApptTime] = useState(() => {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
-                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 10 }}>
                         <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Date</label>
                           <input
@@ -652,7 +660,7 @@ const S = {
   savedDot: { fontSize: 11, color: '#1D9E75', fontWeight: 700 },
   doneDivider: { padding: '6px 16px', fontSize: 11, color: '#aaa', fontWeight: 600, background: '#f0f0ee', textTransform: 'uppercase' },
   main: { display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 },
-  mainHead: { padding: '12px 14px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', flexShrink: 0, flexWrap: 'wrap', gap: 8 },
+  mainHead: { padding: '14px 20px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', flexShrink: 0 },
   avatar: { width: 40, height: 40, borderRadius: '50%', background: '#E1F5EE', color: '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
   ptNameBig: { fontSize: 16, fontWeight: 700, color: '#1a1a1a' },
   ptDetailSub: { fontSize: 12, color: '#888', marginTop: 2 },
@@ -662,7 +670,7 @@ const S = {
   formBody: { flex: 1, overflowY: 'auto', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12 },
   sectionCard: { border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, overflow: 'hidden' },
   sectionHead: { padding: '9px 14px', background: '#fafaf8', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 12, fontWeight: 600, color: '#555', display: 'flex', alignItems: 'center', gap: 6 },
-  sectionBody: { padding: 12 },
+  sectionBody: { padding: 14 },
   prevLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 },
   prevRecord: { background: '#f8fffe', border: '1px solid #E1F5EE', borderRadius: 7, padding: '8px 12px', fontSize: 13, color: '#333', lineHeight: 1.6 },
   fieldLabel: { display: 'block', fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 5 },
@@ -670,8 +678,7 @@ const S = {
   medHeader: { display: 'flex', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f0f0ee' },
   colLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' },
   medRow: { display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 },
-  medRowMobile: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, padding: '8px', background: '#fafaf8', borderRadius: 8, border: '1px solid #f0f0ee' },
-  medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%', minWidth: 0 },
+  medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%' },
   medHint: { fontSize: 11, color: '#aaa', marginBottom: 8, lineHeight: 1.5 },
   removeBtn: { background: 'none', border: '1px solid #e8e8e5', borderRadius: 6, color: '#ccc', padding: '7px', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0, marginTop: 1 },
   addRowBtn: { fontSize: 13, color: '#1D9E75', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: '2px 0' },
@@ -680,10 +687,16 @@ const S = {
   addTestBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 7, color: '#1D9E75', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   apptRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', boxSizing: 'border-box', width: '100%' },
   apptHint: { marginTop: 10, fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '7px 12px', borderRadius: 7 },
-  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, gap: 8, overflowX: 'auto' },
+  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0 },
   btnClear: { padding: '8px 14px', background: '#fff', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 13, color: '#888', cursor: 'pointer' },
   btnPrint: { display: 'flex', alignItems: 'center', padding: '8px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#1D9E75', cursor: 'pointer' },
-  btnSave: { padding: '9px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  btnNext: { padding: '9px 14px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  btnSave: { padding: '9px 20px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
+  btnNext: { padding: '9px 20px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
   emptyMain: { display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#aaa', fontSize: 14 },
+  layoutMobile: { display: 'flex', flexDirection: 'column', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden' },
+  mobilePatientBar: { borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#fff' },
+  mobilePatientBtn: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' },
+  mobilePatientList: { borderTop: '1px solid rgba(0,0,0,0.07)', maxHeight: 260, overflowY: 'auto' },
+  mobilePatientItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', cursor: 'pointer', borderBottom: '1px solid #f5f5f3' },
+  medCardMobile: { background: '#f8fffe', border: '1px solid #E1F5EE', borderRadius: 10, padding: '12px', marginBottom: 10 },
 };
