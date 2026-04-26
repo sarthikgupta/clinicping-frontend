@@ -11,10 +11,10 @@ export default function Layout() {
     { to: '/dashboard', label: 'Home', icon: HomeIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/queue', label: 'Queue', icon: QueueIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/patients', label: 'Patients', icon: PatientsIcon, roles: ['admin', 'doctor', 'receptionist'] },
+    { to: '/followups', label: 'Follow-ups', icon: FollowupIcon, roles: ['admin', 'doctor', 'receptionist'] },
     { to: '/doctor', label: 'Doctor', icon: DoctorIcon, roles: ['admin', 'doctor'] },
+    { to: '/analytics', label: 'Analytics', icon: AnalyticsIcon, roles: ['admin', 'doctor'] },
     { to: '/settings', label: 'Settings', icon: SettingsIcon, roles: ['admin', 'doctor', 'receptionist'] },
-    { to: '/followups', label: 'Follow-ups', icon: FollowupIcon, roles: ['admin', 'doctor', 'receptionist'], paidOnly: true },
-    { to: '/analytics', label: 'Analytics', icon: AnalyticsIcon, roles: ['admin', 'doctor'], paidOnly: true },
     { to: '/billing', label: 'Billing', icon: BillingIcon, roles: ['admin'] },
   ].filter(item => item.roles.includes(role));
 
@@ -25,8 +25,8 @@ export default function Layout() {
   };
   const badge = ROLE_BADGE[role] || ROLE_BADGE.receptionist;
 
-  // Bottom nav — 5 most important items
-  const bottomNav = NAV.slice(0, 5);
+  // Bottom nav — all items, scrollable
+  const bottomNav = NAV;
   const currentTitle = NAV.find(n => location.pathname.startsWith(n.to))?.label || 'ClinicPing';
 
   function handleLogout() { logout(); navigate('/login'); }
@@ -116,8 +116,8 @@ const S = {
   logoutBtn: { display: 'flex', alignItems: 'center', gap: 8, margin: '0 10px 16px', padding: '9px 12px', background: 'none', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, color: '#888', fontSize: 13, cursor: 'pointer' },
   mobileHeader: { display: 'none', position: 'fixed', top: 0, left: 0, right: 0, height: 56, background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: '0 16px', alignItems: 'center', justifyContent: 'space-between', zIndex: 50 },
   main: { flex: 1, padding: 28, overflowY: 'auto', background: '#f7f7f5', minWidth: 0 },
-  bottomNav: { display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid rgba(0,0,0,0.08)', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50, justifyContent: 'space-around', alignItems: 'center' },
-  bottomNavItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px', textDecoration: 'none', flex: 1, minWidth: 0 },
+  bottomNav: { display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid rgba(0,0,0,0.08)', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50, justifyContent: 'flex-start', alignItems: 'center', overflowX: 'auto', WebkitOverflowScrolling: 'touch' },
+  bottomNavItem: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 10px', textDecoration: 'none', flexShrink: 0, minWidth: 56 },
 };
 
 function HomeIcon() { return <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 8L9 2l7 6v8a1 1 0 01-1 1H3a1 1 0 01-1-1V8z" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/><path d="M6 17v-6h6v6" stroke="currentColor" strokeWidth="1.3" fill="none" strokeLinejoin="round"/></svg>; }
