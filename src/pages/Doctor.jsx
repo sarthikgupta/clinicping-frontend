@@ -643,10 +643,10 @@ const S = {
   addTestBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 7, color: '#1D9E75', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   apptRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', boxSizing: 'border-box', width: '100%' },
   apptHint: { marginTop: 10, fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '7px 12px', borderRadius: 7 },
-  footer: { padding: '12px 20px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0 },
+  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, flexWrap: 'wrap', gap: 8 },
   btnClear: { padding: '8px 14px', background: '#fff', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 13, color: '#888', cursor: 'pointer' },
   btnPrint: { display: 'flex', alignItems: 'center', padding: '8px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#1D9E75', cursor: 'pointer' },
-  btnSave: { padding: '9px 20px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  btnNext: { padding: '9px 20px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
+  btnSave: { padding: '9px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
+  btnNext: { padding: '9px 14px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' },
   emptyMain: { display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#aaa', fontSize: 14 },
 };
