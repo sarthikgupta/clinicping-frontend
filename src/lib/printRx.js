@@ -44,8 +44,8 @@ export function printRx(consultation, patient, settings) {
           ${consultation.diagnosis ? `<div class="diag"><strong>Diagnosis:</strong> ${consultation.diagnosis}</div>` : ''}
           <div class="rx-sym">&#8478;</div>
           <table class="med-table">
-            <tr><th style="width:40%">Medicine</th><th style="width:20%">Dose</th><th style="width:20%">Frequency</th><th style="width:20%">Duration</th></tr>
-            ${meds.map(m => `<tr><td>${m.name}</td><td>${m.dose || '—'}</td><td>${m.dose || '—'}</td><td>${m.duration || '—'}</td></tr>`).join('')}
+            <tr><th style="width:50%">Medicine</th><th style="width:25%">Dose</th><th style="width:25%">Duration</th></tr>
+            ${meds.map(m => `<tr><td>${m.name}</td><td>${m.dose || '—'}</td><td>${m.duration || '—'}</td></tr>`).join('')}
           </table>
           ${tests.length > 0 ? `<div class="tests-section"><div class="tests-label">Tests advised</div><div class="tests-val">${tests.join(' &nbsp;·&nbsp; ')}</div></div>` : ''}
           ${nextAppt ? `<div class="appt-box" style="background:${color}15;border-left:3px solid ${color};">Next appointment: <strong>${nextAppt}</strong>${consultation.next_appointment_note ? ' · ' + consultation.next_appointment_note : ''}</div>` : ''}

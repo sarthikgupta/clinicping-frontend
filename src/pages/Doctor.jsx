@@ -311,7 +311,7 @@ const [apptTime, setApptTime] = useState(() => {
       next_appointment_note: apptNote || null,
     };
     const settings = {
-      doctor_name: clinicSettings.doctor_name || clinic?.doctor_name || '',
+      doctor_name: user?.name || '',
       doctor_qualification: clinicSettings.doctor_qualification || '',
       doctor_registration: clinicSettings.doctor_registration || '',
       phone: clinicSettings.phone || '',
