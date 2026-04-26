@@ -465,14 +465,14 @@ const [apptTime, setApptTime] = useState(() => {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><PillIcon /> Medicines Prescribed</div>
                     <div style={S.sectionBody}>
-                      <div style={S.medHeader}>
+                      <div style={{ ...S.medHeader, display: isMobile ? 'none' : 'flex' }}>
                         <span style={{ flex: 2, ...S.colLabel }}>Medicine</span>
                         <span style={{ flex: 1, ...S.colLabel }}>Dose (M·A·E·N)</span>
                         <span style={{ flex: 1, ...S.colLabel }}>Duration</span>
                         <span style={{ width: 28 }} />
                       </div>
                       {medicines.map((med, i) => (
-                        <div key={i} style={S.medRow}>
+                        <div key={i} style={isMobile ? S.medRowMobile : S.medRow}>
                           <input
                             ref={el => { medRefs.current[i] = el; }}
                             style={{ ...S.medInp, flex: 2 }}
@@ -527,7 +527,7 @@ const [apptTime, setApptTime] = useState(() => {
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><CalIcon /> Next Appointment</div>
                     <div style={S.sectionBody}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 10 }}>
                         <div style={{ minWidth: 0 }}>
                           <label style={S.fieldLabel}>Date</label>
                           <input
@@ -573,7 +573,7 @@ const [apptTime, setApptTime] = useState(() => {
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button style={S.btnSave} onClick={() => handleSave(false)} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-                    <button style={S.btnNext} onClick={() => handleSave(true)} disabled={saving}>Save &amp; call next →</button>
+                    <button style={S.btnNext} onClick={() => handleSave(true)} disabled={saving}>{isMobile ? 'Save & next →' : 'Save & call next →'}</button>
                   </div>
                 </div>
               </div>
@@ -616,7 +616,7 @@ const S = {
   savedDot: { fontSize: 11, color: '#1D9E75', fontWeight: 700 },
   doneDivider: { padding: '6px 16px', fontSize: 11, color: '#aaa', fontWeight: 600, background: '#f0f0ee', textTransform: 'uppercase' },
   main: { display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 },
-  mainHead: { padding: '14px 20px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', flexShrink: 0 },
+  mainHead: { padding: '12px 14px', borderBottom: '1px solid rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', flexShrink: 0, flexWrap: 'wrap', gap: 8 },
   avatar: { width: 40, height: 40, borderRadius: '50%', background: '#E1F5EE', color: '#085041', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
   ptNameBig: { fontSize: 16, fontWeight: 700, color: '#1a1a1a' },
   ptDetailSub: { fontSize: 12, color: '#888', marginTop: 2 },
@@ -626,7 +626,7 @@ const S = {
   formBody: { flex: 1, overflowY: 'auto', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12 },
   sectionCard: { border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, overflow: 'hidden' },
   sectionHead: { padding: '9px 14px', background: '#fafaf8', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 12, fontWeight: 600, color: '#555', display: 'flex', alignItems: 'center', gap: 6 },
-  sectionBody: { padding: 14 },
+  sectionBody: { padding: 12 },
   prevLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 },
   prevRecord: { background: '#f8fffe', border: '1px solid #E1F5EE', borderRadius: 7, padding: '8px 12px', fontSize: 13, color: '#333', lineHeight: 1.6 },
   fieldLabel: { display: 'block', fontSize: 11, fontWeight: 600, color: '#888', marginBottom: 5 },
@@ -634,6 +634,7 @@ const S = {
   medHeader: { display: 'flex', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f0f0ee' },
   colLabel: { fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' },
   medRow: { display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 },
+  medRowMobile: { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, padding: '8px', background: '#fafaf8', borderRadius: 8, border: '1px solid #f0f0ee' },
   medInp: { flex: 1, padding: '9px 10px', border: '1.5px solid #e8e8e5', borderRadius: 7, fontSize: 13, outline: 'none', color: '#1a1a1a', width: '100%', minWidth: 0 },
   medHint: { fontSize: 11, color: '#aaa', marginBottom: 8, lineHeight: 1.5 },
   removeBtn: { background: 'none', border: '1px solid #e8e8e5', borderRadius: 6, color: '#ccc', padding: '7px', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0, marginTop: 1 },
@@ -643,7 +644,7 @@ const S = {
   addTestBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 7, color: '#1D9E75', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   apptRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', boxSizing: 'border-box', width: '100%' },
   apptHint: { marginTop: 10, fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '7px 12px', borderRadius: 7 },
-  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, flexWrap: 'wrap', gap: 8 },
+  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, gap: 8 },
   btnClear: { padding: '8px 14px', background: '#fff', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 13, color: '#888', cursor: 'pointer' },
   btnPrint: { display: 'flex', alignItems: 'center', padding: '8px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#1D9E75', cursor: 'pointer' },
   btnSave: { padding: '9px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
