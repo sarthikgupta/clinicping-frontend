@@ -473,36 +473,72 @@ const [apptTime, setApptTime] = useState(() => {
                       </div>
                       {medicines.map((med, i) => (
                         <div key={i} style={isMobile ? S.medRowMobile : S.medRow}>
-                          <input
-                            ref={el => { medRefs.current[i] = el; }}
-                            style={{ ...S.medInp, flex: 2 }}
-                            placeholder="Medicine Name"
-                            value={med.name}
-                            onChange={e => updateMed(i, 'name', e.target.value)}
-                            onKeyDown={e => handleMedKeyDown(e, i, 'name')}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <DosePicker
-                              value={med.dose}
-                              onChange={val => updateMed(i, 'dose', val)}
-                            />
-                          </div>
-                          <input
-                            style={S.medInp}
-                            placeholder="30 days"
-                            value={med.duration}
-                            onChange={e => updateMed(i, 'duration', e.target.value)}
-                            onKeyDown={e => handleMedKeyDown(e, i, 'duration')}
-                            data-med-dur={i}
-                          />
-                          {medicines.length > 1 && (
-                            <button style={S.removeBtn} onClick={() => removeMed(i)} tabIndex={-1}>
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                            </button>
+                          {isMobile ? (
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                <input
+                                  ref={el => { medRefs.current[i] = el; }}
+                                  style={{ ...S.medInp, flex: 1, fontSize: 14 }}
+                                  placeholder="Medicine Name"
+                                  value={med.name}
+                                  onChange={e => updateMed(i, 'name', e.target.value)}
+                                  onKeyDown={e => handleMedKeyDown(e, i, 'name')}
+                                />
+                                {medicines.length > 1 && (
+                                  <button style={{ ...S.removeBtn, flexShrink: 0 }} onClick={() => removeMed(i)} tabIndex={-1}>
+                                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                  </button>
+                                )}
+                              </div>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600, letterSpacing: '0.04em' }}>DOSE</div>
+                                  <DosePicker value={med.dose} onChange={val => updateMed(i, 'dose', val)} />
+                                </div>
+                                <div style={{ width: 100, flexShrink: 0 }}>
+                                  <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600, letterSpacing: '0.04em' }}>DURATION</div>
+                                  <input
+                                    style={{ ...S.medInp, width: '100%', boxSizing: 'border-box', fontSize: 13 }}
+                                    placeholder="30 days"
+                                    value={med.duration}
+                                    onChange={e => updateMed(i, 'duration', e.target.value)}
+                                    onKeyDown={e => handleMedKeyDown(e, i, 'duration')}
+                                    data-med-dur={i}
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <input
+                                ref={el => { medRefs.current[i] = el; }}
+                                style={{ ...S.medInp, flex: 2 }}
+                                placeholder="Medicine Name"
+                                value={med.name}
+                                onChange={e => updateMed(i, 'name', e.target.value)}
+                                onKeyDown={e => handleMedKeyDown(e, i, 'name')}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <DosePicker value={med.dose} onChange={val => updateMed(i, 'dose', val)} />
+                              </div>
+                              <input
+                                style={S.medInp}
+                                placeholder="30 days"
+                                value={med.duration}
+                                onChange={e => updateMed(i, 'duration', e.target.value)}
+                                onKeyDown={e => handleMedKeyDown(e, i, 'duration')}
+                                data-med-dur={i}
+                              />
+                              {medicines.length > 1 && (
+                                <button style={S.removeBtn} onClick={() => removeMed(i)} tabIndex={-1}>
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       ))}
-                      <div style={S.medHint}>M = Morning · A = Afternoon · E = Evening · N = Night · Press ✎ to type custom</div>
+                                            <div style={S.medHint}>M = Morning · A = Afternoon · E = Evening · N = Night · Press ✎ to type custom</div>
                       <button style={S.addRowBtn} onClick={addMedRow}>+ Add medicine</button>
                     </div>
                   </div>
@@ -644,7 +680,7 @@ const S = {
   addTestBtn: { padding: '8px 16px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 7, color: '#1D9E75', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 },
   apptRow: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', boxSizing: 'border-box', width: '100%' },
   apptHint: { marginTop: 10, fontSize: 12, color: '#1D9E75', background: '#E1F5EE', padding: '7px 12px', borderRadius: 7 },
-  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, gap: 8 },
+  footer: { padding: '10px 14px', borderTop: '1px solid rgba(0,0,0,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, gap: 8, overflowX: 'auto' },
   btnClear: { padding: '8px 14px', background: '#fff', border: '1.5px solid #e8e8e5', borderRadius: 8, fontSize: 13, color: '#888', cursor: 'pointer' },
   btnPrint: { display: 'flex', alignItems: 'center', padding: '8px 14px', background: '#fff', border: '1.5px solid #1D9E75', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#1D9E75', cursor: 'pointer' },
   btnSave: { padding: '9px 14px', background: '#1D9E75', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' },
