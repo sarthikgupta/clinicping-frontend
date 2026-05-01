@@ -14,6 +14,10 @@ export function printRx(consultation, patient, settings) {
     .filter(t => t.name)
     .map(t => t.name);
 
+  const treatmentsList = (consultation.treatments || [])
+    .filter(t => t.name)
+    .sort((a,b) => (a.sort_order||0)-(b.sort_order||0));
+
   const nextAppt = consultation.next_appointment_date
     ? new Date(consultation.next_appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
@@ -47,6 +51,7 @@ export function printRx(consultation, patient, settings) {
             <tr><th style="width:50%">Medicine</th><th style="width:25%">Dose</th><th style="width:25%">Duration</th></tr>
             ${meds.map(m => `<tr><td>${m.name}</td><td>${m.dose || '—'}</td><td>${m.duration || '—'}</td></tr>`).join('')}
           </table>
+          ${treatmentsList.length > 0 ? `<div class="tests-section" style="margin-top:10px;"><div class="tests-label">Treatments</div><table class="med-table" style="margin-top:6px;"><tr><th style="width:50%">Treatment</th><th style="width:25%">Duration</th><th style="width:25%">Notes</th></tr>${treatmentsList.map(t => `<tr><td>${t.name}</td><td>${t.duration||'—'}</td><td>${t.notes||'—'}</td></tr>`).join('')}</table></div>` : ''}
           ${tests.length > 0 ? `<div class="tests-section"><div class="tests-label">Tests advised</div><div class="tests-val">${tests.join(' &nbsp;·&nbsp; ')}</div></div>` : ''}
           ${nextAppt ? `<div class="appt-box" style="background:${color}15;border-left:3px solid ${color};">Next appointment: <strong>${nextAppt}</strong>${consultation.next_appointment_note ? ' · ' + consultation.next_appointment_note : ''}</div>` : ''}
           ${settings.rx_footer_note ? `<div class="footer-note">${settings.rx_footer_note}</div>` : ''}
@@ -89,6 +94,11 @@ export function printRx(consultation, patient, settings) {
               <div class="med-detail">${m.dose || ''}</div>
               <div class="med-detail">${m.duration || ''}</div>
             </div>`).join('')}
+          ${treatmentsList.length > 0 ? `
+            <div class="tests-wrap">
+              <div class="tests-label">Treatments</div>
+              <div class="chips">${treatmentsList.map(t => `<span class="chip" style="background:#E1F5EE;color:#085041;">${t.name}${t.duration ? ' · '+t.duration : ''}</span>`).join('')}</div>
+            </div>` : ''}
           ${tests.length > 0 ? `
             <div class="tests-wrap">
               <div class="tests-label">Tests advised</div>

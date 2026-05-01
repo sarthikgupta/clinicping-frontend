@@ -141,6 +141,7 @@ const [apptTime, setApptTime] = useState(() => {
 });
   const [apptNote, setApptNote] = useState('');
   const [focusLastMed, setFocusLastMed] = useState(false);
+  const [treatments, setTreatments] = useState([]);
   const [prevOpen, setPrevOpen] = useState(false);
   const medRefs = useRef([]);
 
@@ -212,6 +213,9 @@ const [apptTime, setApptTime] = useState(() => {
         ? today.medicines.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
         : [{ name: '', dose: '', duration: '' }]);
       setTests(today.tests_ordered?.map(t => t.name) || []);
+      setTreatments(today.treatments?.length > 0
+        ? today.treatments.sort((a,b) => (a.sort_order||0)-(b.sort_order||0))
+        : []);
       setApptDate(today.next_appointment_date || '');
       setApptTime(today.next_appointment_time || '10:00');
       setApptNote(today.next_appointment_note || '');
@@ -224,6 +228,7 @@ const [apptTime, setApptTime] = useState(() => {
     setSymptoms(''); setDiagnosis('');
     setMedicines([{ name: '', dose: '', duration: '' }]);
     setTests([]); setTestInput('');
+    setTreatments([]);
     setApptDate(''); setApptTime('10:00'); setApptNote('');
   }
 
@@ -259,6 +264,7 @@ const [apptTime, setApptTime] = useState(() => {
         symptoms, diagnosis,
         medicines: medicines.filter(m => m.name.trim()),
         tests: tests.map(name => ({ name })),
+        treatments: treatments.filter(t => t.name.trim()),
         next_appointment_date: apptDate || null,
         next_appointment_time: apptTime || null,
         next_appointment_note: apptNote || null,
@@ -306,6 +312,7 @@ const [apptTime, setApptTime] = useState(() => {
       symptoms, diagnosis,
       medicines: medicines.filter(m => m.name.trim()).map((m, i) => ({ ...m, sort_order: i })),
       tests_ordered: tests.map((name, i) => ({ name, sort_order: i })),
+      treatments: treatments.filter(t => t.name.trim()).map((t, i) => ({ ...t, sort_order: i })),
       next_appointment_date: apptDate || null,
       next_appointment_time: apptTime || null,
       next_appointment_note: apptNote || null,
@@ -551,6 +558,33 @@ const [apptTime, setApptTime] = useState(() => {
                     </div>
                   </div>
 
+                  {/* ── Treatments ── */}
+                  <div style={S.sectionCard}>
+                    <div style={S.sectionHead}><TreatmentIcon /> Treatments</div>
+                    <div style={S.sectionBody}>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f0f0ee' }}>
+                        <span style={{ flex: 2, fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Treatment</span>
+                        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Duration</span>
+                        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: '#aaa', textTransform: 'uppercase' }}>Notes</span>
+                        <span style={{ width: 28 }} />
+                      </div>
+                      {treatments.map((t, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                          <input style={{ ...S.medInp, flex: 2 }} placeholder="e.g. Hot pack, TENS, Exercise"
+                            value={t.name} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, name: e.target.value} : x))} />
+                          <input style={{ ...S.medInp, flex: 1 }} placeholder="20 min"
+                            value={t.duration} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, duration: e.target.value} : x))} />
+                          <input style={{ ...S.medInp, flex: 1 }} placeholder="Notes"
+                            value={t.notes} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, notes: e.target.value} : x))} />
+                          <button style={S.removeBtn} onClick={() => setTreatments(tr => tr.filter((_,j) => j!==i))} tabIndex={-1}>
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                          </button>
+                        </div>
+                      ))}
+                      <button style={S.addRowBtn} onClick={() => setTreatments(t => [...t, { name: '', duration: '', notes: '' }])}>+ Add treatment</button>
+                    </div>
+                  </div>
+
                   <div style={S.sectionCard}>
                     <div style={S.sectionHead}><FlaskIcon /> Tests Ordered</div>
                     <div style={S.sectionBody}>
@@ -634,6 +668,7 @@ function ClockIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fi
 function PlusIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5h9" stroke="#888" strokeWidth="1.5" strokeLinecap="round"/></svg>; }
 function PillIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="2" y="4" width="9" height="5" rx="2.5" stroke="#888" strokeWidth="1.2" fill="none"/><path d="M6.5 4v5" stroke="#888" strokeWidth="1.2"/></svg>; }
 function FlaskIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M4.5 2v4.5L2 10.5h9L8.5 6.5V2" stroke="#888" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/><path d="M3.5 2h6" stroke="#888" strokeWidth="1.2" strokeLinecap="round"/></svg>; }
+function TreatmentIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M6.5 2v9" stroke="#888" strokeWidth="1.5" strokeLinecap="round"/><circle cx="6.5" cy="6.5" r="5.5" stroke="#888" strokeWidth="1.2" fill="none"/></svg>; }
 function CalIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1.5" y="2.5" width="10" height="9" rx="1.5" stroke="#888" strokeWidth="1.2" fill="none"/><path d="M1.5 5.5h10M4.5 1.5v2M8.5 1.5v2" stroke="#888" strokeWidth="1.2" strokeLinecap="round"/></svg>; }
 function PrintIcon() { return <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ marginRight: 4 }}><rect x="1.5" y="4.5" width="10" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none"/><path d="M3.5 4.5V2.5a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" strokeWidth="1.2"/><path d="M3.5 10.5v-2h6v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>; }
 
