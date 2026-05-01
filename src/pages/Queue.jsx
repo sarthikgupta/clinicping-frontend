@@ -21,15 +21,18 @@ export default function Queue() {
   const isReceptionist = user?.role === 'receptionist';
   const isDoctor = user?.role === 'doctor';
   const isAdmin = user?.role === 'admin';
+  const [avgConsultMinutes, setAvgConsultMinutes] = useState(10);
   const canSelectDoctor = isReceptionist || isAdmin;
   const isMultiDoctor = doctors.length > 1;
 
   const load = useCallback(async () => {
     try {
-      const [q, s] = await Promise.all([
+      const [q, s, settings] = await Promise.all([
         api.get('/api/queue/today'),
         api.get('/api/queue/stats'),
+        api.get('/api/settings'),
       ]);
+      if (settings?.data?.avg_consult_minutes) setAvgConsultMinutes(settings.data.avg_consult_minutes);
       setQueue(q.data);
       setStats(s.data);
     } catch (e) { console.error(e); }
@@ -301,7 +304,7 @@ export default function Queue() {
                         <div style={S.patientMeta}>
                           {token.patients?.phone && token.patients.phone !== '' && `${token.patients.phone}`}
                           {token.reason && (token.patients?.phone ? ` · ${token.reason}` : token.reason)}
-                          {token.status === 'waiting' && <span style={{ color: '#854F0B' }}> · ~{(waitingAhead + 1) * 10} min</span>}
+                          {token.status === 'waiting' && <span style={{ color: '#854F0B' }}> · ~{(waitingAhead + 1) * avgConsultMinutes} min</span>}
                         </div>
                       </div>
                       {!isConsulting && (
