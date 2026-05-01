@@ -46,7 +46,7 @@ export default function Settings() {
   const tabs = allTabs.filter(t => t.roles.includes(user?.role));
   const [tab, setTab] = useState('profile');
 
-  const [clinicForm, setClinicForm] = useState({ name: '', doctor_name: '', doctor_qualification: '', doctor_registration: '', phone: '', city: '', clinic_address: '', clinic_timings: '', rx_template: 'classic', rx_color: '#1D9E75', rx_footer_note: '', clinic_code: '' });
+  const [clinicForm, setClinicForm] = useState({ name: '', doctor_name: '', doctor_qualification: '', doctor_registration: '', phone: '', city: '', clinic_address: '', clinic_timings: '', rx_template: 'classic', rx_color: '#1D9E75', rx_footer_note: '', clinic_code: '', avg_consult_minutes: 10 });
   const [clinicCodeInput, setClinicCodeInput] = useState('');
   const [profileForm, setProfileForm] = useState({ name: '', username: '', qualification: '', registration_no: '', speciality: '' });
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
@@ -241,6 +241,18 @@ export default function Settings() {
               <Field label="Phone" placeholder="9988776655" value={clinicForm.phone} onChange={setC('phone')} />
               <Field label="Full address" placeholder="House No. 123, Civil Lines, Nabha" value={clinicForm.clinic_address} onChange={setC('clinic_address')} />
               <Field label="Clinic timings" placeholder="Mon–Sat: 9AM–1PM, 5PM–8PM" value={clinicForm.clinic_timings} onChange={setC('clinic_timings')} />
+                <div style={{ marginBottom: 14 }}>
+                  <label style={S.fieldLabel}>Avg. consultation time (minutes)</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input
+                      type="number" min="1" max="120"
+                      style={{ ...S.inp, width: 80 }}
+                      value={clinicForm.avg_consult_minutes || 10}
+                      onChange={e => setClinicForm(f => ({ ...f, avg_consult_minutes: parseInt(e.target.value) || 10 }))}
+                    />
+                    <span style={{ fontSize: 12, color: '#888' }}>min per patient — used for WhatsApp wait time</span>
+                  </div>
+                </div>
             </div>
           </div>
 
