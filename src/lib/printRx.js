@@ -52,7 +52,7 @@ export function printRx(consultation, patient, settings) {
             ${meds.map(m => `<tr><td>${m.name}</td><td>${m.dose || '—'}</td><td>${m.duration || '—'}</td></tr>`).join('')}
           </table>
           ${treatmentsList.length > 0 ? `<div class="tests-section" style="margin-top:10px;"><div class="tests-label">Treatments</div><table class="med-table" style="margin-top:6px;"><tr><th style="width:50%">Treatment</th><th style="width:25%">Duration</th><th style="width:25%">Notes</th></tr>${treatmentsList.map(t => `<tr><td>${t.name}</td><td>${t.duration||'—'}</td><td>${t.notes||'—'}</td></tr>`).join('')}</table></div>` : ''}
-          ${tests.length > 0 ? `<div class="tests-section"><div class="tests-label">Tests advised</div><div class="tests-val">${tests.join(' &nbsp;·&nbsp; ')}</div></div>` : ''}
+          ${tests.length > 0 ? `<div class="tests-section" style="margin-top:10px;"><div class="tests-label">Tests advised</div><div class="tests-val">${tests.join(' &nbsp;·&nbsp; ')}</div></div>` : ''}
           ${nextAppt ? `<div class="appt-box" style="background:${color}15;border-left:3px solid ${color};">Next appointment: <strong>${nextAppt}</strong>${consultation.next_appointment_note ? ' · ' + consultation.next_appointment_note : ''}</div>` : ''}
           ${settings.rx_footer_note ? `<div class="footer-note">${settings.rx_footer_note}</div>` : ''}
         </div>
@@ -97,7 +97,13 @@ export function printRx(consultation, patient, settings) {
           ${treatmentsList.length > 0 ? `
             <div class="tests-wrap">
               <div class="tests-label">Treatments</div>
-              <div class="chips">${treatmentsList.map(t => `<span class="chip" style="background:#E1F5EE;color:#085041;">${t.name}${t.duration ? ' · '+t.duration : ''}</span>`).join('')}</div>
+              <div style="margin-top:5px;">${treatmentsList.map(t => `
+                <div class="med-row">
+                  <div class="med-name">${t.name}</div>
+                  <div class="med-detail">${t.duration||'—'}</div>
+                  <div class="med-detail">${t.notes||'—'}</div>
+                </div>`).join('')}
+              </div>
             </div>` : ''}
           ${tests.length > 0 ? `
             <div class="tests-wrap">
@@ -136,6 +142,7 @@ export function printRx(consultation, patient, settings) {
             <div class="med-min">${i + 1}. ${m.name}
               <div class="med-sub-min">Dose: ${m.dose || '—'} &nbsp;·&nbsp; Duration: ${m.duration || '—'}</div>
             </div>`).join('')}
+          ${treatmentsList.length > 0 ? `<hr class="divider"/><div class="tests-min">Treatments: ${treatmentsList.map(t => t.name + (t.duration ? ' ('+t.duration+')' : '')).join(' · ')}</div>` : ''}
           ${tests.length > 0 ? `<hr class="divider"/><div class="tests-min">Tests: ${tests.join(' · ')}</div>` : ''}
           ${nextAppt ? `<div class="tests-min" style="margin-top:6px;">Next visit: <strong>${nextAppt}</strong>${consultation.next_appointment_note ? ' — ' + consultation.next_appointment_note : ''}</div>` : ''}
           ${settings.rx_footer_note ? `<div class="footer-note">${settings.rx_footer_note}</div>` : ''}

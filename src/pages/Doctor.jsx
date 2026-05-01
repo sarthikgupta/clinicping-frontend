@@ -571,11 +571,17 @@ const [apptTime, setApptTime] = useState(() => {
                       {treatments.map((t, i) => (
                         <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
                           <input style={{ ...S.medInp, flex: 2 }} placeholder="e.g. Hot pack, TENS, Exercise"
-                            value={t.name} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, name: e.target.value} : x))} />
+                            value={t.name}
+                            onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, name: e.target.value} : x))}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); setTreatments(tr => [...tr, { name: '', duration: '', notes: '' }]); }}} />
                           <input style={{ ...S.medInp, flex: 1 }} placeholder="20 min"
-                            value={t.duration} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, duration: e.target.value} : x))} />
+                            value={t.duration}
+                            onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, duration: e.target.value} : x))}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); setTreatments(tr => [...tr, { name: '', duration: '', notes: '' }]); }}} />
                           <input style={{ ...S.medInp, flex: 1 }} placeholder="Notes"
-                            value={t.notes} onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, notes: e.target.value} : x))} />
+                            value={t.notes}
+                            onChange={e => setTreatments(tr => tr.map((x,j) => j===i ? {...x, notes: e.target.value} : x))}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); setTreatments(tr => [...tr, { name: '', duration: '', notes: '' }]); }}} />
                           <button style={S.removeBtn} onClick={() => setTreatments(tr => tr.filter((_,j) => j!==i))} tabIndex={-1}>
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                           </button>
