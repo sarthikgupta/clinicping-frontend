@@ -205,8 +205,8 @@ export function printRx(consultation, patient, settings) {
     /* ── CLASSIC ── */
     .hdr { padding: 14px 20px; display: flex; justify-content: space-between; align-items: flex-start; color: #fff; }
     .hdr-name { font-size: 15px; font-weight: 700; }
-    .hdr-sub { font-size: 10px; opacity: 0.85; margin-top: 2px; }
-    .hdr-right { text-align: right; font-size: 10px; opacity: 0.9; line-height: 1.6; }
+    .hdr-sub { font-size: 10px; color: rgba(255,255,255,0.95); margin-top: 2px; }
+    .hdr-right { text-align: right; font-size: 11px; color: #fff; line-height: 1.6; }
     .body { padding: 14px 20px; }
     .pt-row { display: flex; gap: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 12px; }
     .pt-field { flex: 1; }
