@@ -6,6 +6,7 @@ const TEMPLATES = [
   { key: 'classic', label: 'Classic', desc: 'Green header, traditional layout' },
   { key: 'modern', label: 'Modern', desc: 'Clean, numbered medicines, chips' },
   { key: 'minimal', label: 'Minimal', desc: 'Compact, typewriter style' },
+  { key: 'letterhead', label: 'Letterhead', desc: 'No header — print on your own letterhead' },
 ];
 const COLORS = [
   { hex: '#1D9E75', name: 'Green' },

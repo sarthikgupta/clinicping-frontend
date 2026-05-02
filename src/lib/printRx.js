@@ -24,6 +24,37 @@ export function printRx(consultation, patient, settings) {
 
   let body = '';
 
+  if (template === 'letterhead') {
+    body = `
+      <div class="rx" style="padding:0;">
+        <div class="body" style="padding:14px 20px;">
+          <div class="pt-row">
+            <div class="pt-field"><div class="pt-label">Patient</div><div class="pt-val">${patient.name}</div></div>
+            <div class="pt-field"><div class="pt-label">Phone</div><div class="pt-val">${patient.phone || '—'}</div></div>
+            <div class="pt-field"><div class="pt-label">Date</div><div class="pt-val">${date}</div></div>
+            <div class="pt-field"><div class="pt-label">Visit</div><div class="pt-val">#${patient.visit_count || 1}</div></div>
+          </div>
+          ${consultation.diagnosis ? `<div class="diag"><strong>Diagnosis:</strong> ${consultation.diagnosis}</div>` : ''}
+          <div class="rx-sym">&#8478;</div>
+          <table class="med-table">
+            <tr><th style="width:50%">Medicine</th><th style="width:25%">Dose</th><th style="width:25%">Duration</th></tr>
+            ${meds.map(m => `<tr><td>${m.name}</td><td>${m.dose || '—'}</td><td>${m.duration || '—'}</td></tr>`).join('')}
+          </table>
+          ${treatmentsList.length > 0 ? `<div class="tests-section" style="margin-top:10px;"><div class="tests-label">Treatments</div><table class="med-table" style="margin-top:6px;"><tr><th style="width:50%">Treatment</th><th style="width:25%">Duration</th><th style="width:25%">Notes</th></tr>${treatmentsList.map(t => `<tr><td>${t.name}</td><td>${t.duration||'—'}</td><td>${t.notes||'—'}</td></tr>`).join('')}</table></div>` : ''}
+          ${tests.length > 0 ? `<div class="tests-section" style="margin-top:10px;"><div class="tests-label">Tests advised</div><div class="tests-val">${tests.join(' &nbsp;·&nbsp; ')}</div></div>` : ''}
+          ${nextAppt ? `<div class="appt-box" style="background:${color}15;border-left:3px solid ${color};">Next appointment: <strong>${nextAppt}</strong>${consultation.next_appointment_note ? ' · ' + consultation.next_appointment_note : ''}</div>` : ''}
+          ${settings.rx_footer_note ? `<div class="footer-note">${settings.rx_footer_note}</div>` : ''}
+        </div>
+        <div class="footer" style="margin-top:40px;">
+          <div style="font-size:10px;color:#aaa;">Powered by ClinicPing</div>
+          <div class="sig-area" style="border-top:2px solid ${color};">
+            <div class="sig-name" style="color:${color};">${settings.doctor_name || ''}</div>
+            <div class="sig-label">Signature</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
   if (template === 'classic') {
     body = `
       <div class="rx">
