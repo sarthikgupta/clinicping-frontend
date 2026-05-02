@@ -123,6 +123,7 @@ export default function Doctor() {
   const [sendSlip, setSendSlip] = useState(true); // WhatsApp slip toggle
   const [toast, setToast] = useState({ msg: '', type: 'success' });
   const [clinicSettings, setClinicSettings] = useState({});
+  const [profileSettings, setProfileSettings] = useState({});
 
   const [symptoms, setSymptoms] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
@@ -162,6 +163,7 @@ const [apptTime, setApptTime] = useState(() => {
 
   useEffect(() => {
     api.get('/api/settings').then(r => setClinicSettings(r.data)).catch(console.error);
+    api.get('/api/settings/profile').then(r => setProfileSettings(r.data)).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -318,9 +320,9 @@ const [apptTime, setApptTime] = useState(() => {
       next_appointment_note: apptNote || null,
     };
     const settings = {
-      doctor_name: user?.name || '',
-      doctor_qualification: clinicSettings.doctor_qualification || '',
-      doctor_registration: clinicSettings.doctor_registration || '',
+      doctor_name: profileSettings.name || user?.name || '',
+      doctor_qualification: profileSettings.qualification || '',
+      doctor_registration: profileSettings.registration_no || '',
       phone: clinicSettings.phone || '',
       clinic_address: clinicSettings.clinic_address || '',
       clinic_timings: clinicSettings.clinic_timings || '',

@@ -46,7 +46,7 @@ export default function Settings() {
   const tabs = allTabs.filter(t => t.roles.includes(user?.role));
   const [tab, setTab] = useState('profile');
 
-  const [clinicForm, setClinicForm] = useState({ name: '', doctor_name: '', doctor_qualification: '', doctor_registration: '', phone: '', city: '', clinic_address: '', clinic_timings: '', rx_template: 'classic', rx_color: '#1D9E75', rx_footer_note: '', clinic_code: '', avg_consult_minutes: 10 });
+  const [clinicForm, setClinicForm] = useState({ name: '', doctor_name: '', doctor_qualification: '', doctor_registration: '', phone: '', city: '', clinic_address: '', clinic_timings: '', rx_template: 'classic', rx_color: '#1D9E75', rx_footer_note: '', clinic_code: '' });
   const [clinicCodeInput, setClinicCodeInput] = useState('');
   const [profileForm, setProfileForm] = useState({ name: '', username: '', qualification: '', registration_no: '', speciality: '' });
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
@@ -64,7 +64,7 @@ export default function Settings() {
     ];
     if (isAdmin) {
       loads.push(api.get('/api/settings').then(r => setClinicForm(f => ({ ...f, ...r.data }))));
-      loads.push(api.get('/api/auth/users').then(r => setUsers(r.data)));
+      loads.push(api.get('/api/settings/users').then(r => setUsers(r.data)));
     }
     Promise.all(loads).catch(console.error).finally(() => setLoading(false));
   }, [isAdmin]);
@@ -74,7 +74,12 @@ export default function Settings() {
 
   async function saveClinic(e) {
     e.preventDefault(); setSaving(true);
-    try { await api.patch('/api/settings', clinicForm); showToast('Saved'); }
+    try {
+      await api.patch('/api/settings', clinicForm);
+      // Also save doctor name/qualification/registration from profileForm
+      await api.patch('/api/settings/profile', { name: profileForm.name, qualification: profileForm.qualification, registration_no: profileForm.registration_no, username: profileForm.username, speciality: profileForm.speciality });
+      showToast('Saved');
+    }
     catch { showToast('Save failed', 'error'); } finally { setSaving(false); }
   }
 
@@ -109,7 +114,7 @@ export default function Settings() {
   async function addUser(e) {
     e.preventDefault(); setSaving(true);
     try {
-      const { data } = await api.post('/api/auth/users', newUser);
+      const { data } = await api.post('/api/settings/users', newUser);
       setUsers(u => [...u, data]);
       setNewUser({ name: '', username: '', email: '', password: '', role: 'receptionist', qualification: '', registration_no: '', speciality: '' });
       setShowAddUser(false);
@@ -121,7 +126,7 @@ export default function Settings() {
 
   async function toggleActive(u) {
     try {
-      const { data } = await api.patch(`/api/auth/users/${u.id}`, { is_active: !u.is_active });
+      const { data } = await api.patch(`/api/settings/users/${u.id}`, { is_active: !u.is_active });
       setUsers(us => us.map(u2 => u2.id === data.id ? data : u2));
       showToast(data.is_active ? `${data.name} activated` : `${data.name} deactivated`);
     } catch { showToast('Failed', 'error'); }
@@ -241,18 +246,6 @@ export default function Settings() {
               <Field label="Phone" placeholder="9988776655" value={clinicForm.phone} onChange={setC('phone')} />
               <Field label="Full address" placeholder="House No. 123, Civil Lines, Nabha" value={clinicForm.clinic_address} onChange={setC('clinic_address')} />
               <Field label="Clinic timings" placeholder="Mon–Sat: 9AM–1PM, 5PM–8PM" value={clinicForm.clinic_timings} onChange={setC('clinic_timings')} />
-                <div style={{ marginBottom: 14 }}>
-                  <label style={S.fieldLabel}>Avg. consultation time (minutes)</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <input
-                      type="number" min="1" max="120"
-                      style={{ ...S.inp, width: 80 }}
-                      value={clinicForm.avg_consult_minutes || 10}
-                      onChange={e => setClinicForm(f => ({ ...f, avg_consult_minutes: parseInt(e.target.value) || 10 }))}
-                    />
-                    <span style={{ fontSize: 12, color: '#888' }}>min per patient — used for WhatsApp wait time</span>
-                  </div>
-                </div>
             </div>
           </div>
 
@@ -260,11 +253,11 @@ export default function Settings() {
             <div style={S.cardHead}>Primary doctor (for prescriptions)</div>
             <div style={S.cardBody}>
               <div style={S.row2}>
-                <Field label="Doctor name" placeholder="Dr. Anumeha Bhalla" value={clinicForm.doctor_name} onChange={setC('doctor_name')} />
-                <Field label="Qualification" placeholder="MBBS, MD" value={clinicForm.doctor_qualification} onChange={setC('doctor_qualification')} />
+                <Field label="Doctor name" placeholder="Dr. Anumeha Bhalla" value={profileForm.name} onChange={e => setProfileForm(f => ({ ...f, name: e.target.value }))} />
+                <Field label="Qualification" placeholder="MBBS, MD" value={profileForm.qualification} onChange={e => setProfileForm(f => ({ ...f, qualification: e.target.value }))} />
               </div>
               <div style={S.row2}>
-                <Field label="Registration no." placeholder="PMC-2019-XXXXX" value={clinicForm.doctor_registration} onChange={setC('doctor_registration')} />
+                <Field label="Registration no." placeholder="PMC-2019-XXXXX" value={profileForm.registration_no} onChange={e => setProfileForm(f => ({ ...f, registration_no: e.target.value }))} />
                 <Field label="Rx footer note" placeholder="Take medicines after food" value={clinicForm.rx_footer_note} onChange={setC('rx_footer_note')} />
               </div>
             </div>
@@ -292,7 +285,7 @@ export default function Settings() {
                         {clinicForm.rx_template === t.key && <div style={{ width: 18, height: 18, borderRadius: '50%', background: clinicForm.rx_color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5l2.5 2.5L8 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg></div>}
                       </div>
                     </div>
-                    <button type="button" style={S.previewBtn} onClick={() => printRx(SAMPLE, SAMPLE_PT, { ...clinicForm, rx_template: t.key, doctor_name: clinicForm.doctor_name || user?.name })}>Preview →</button>
+                    <button type="button" style={S.previewBtn} onClick={() => printRx(SAMPLE, SAMPLE_PT, { ...clinicForm, rx_template: t.key, doctor_name: profileForm.name || user?.name, doctor_qualification: profileForm.qualification || '', doctor_registration: profileForm.registration_no || '' })}>Preview →</button>
                   </div>
                 ))}
               </div>
@@ -394,7 +387,7 @@ function UserRow({ u, onSave, onToggle, showToast }) {
     if (ef.username && !/^[a-z0-9_.]{3,20}$/.test(ef.username)) { rowToast('Invalid username format'); return; }
     setSv(true);
     try {
-      const { data } = await api.patch(`/api/auth/users/${u.id}`, ef);
+      const { data } = await api.patch(`/api/settings/users/${u.id}`, ef);
       onSave(data); rowToast('Saved ✓');
     } catch (err) { rowToast(err.response?.data?.error || 'Failed'); } finally { setSv(false); }
   }
@@ -404,7 +397,7 @@ function UserRow({ u, onSave, onToggle, showToast }) {
     if (pw.length < 6) { rowToast('Min 6 characters'); return; }
     setPsv(true);
     try {
-      await api.post(`/api/auth/users/${u.id}/reset-password`, { new_password: pw });
+      await api.post(`/api/settings/users/${u.id}/reset-password`, { new_password: pw });
       setPw(''); rowToast('Password reset ✓');
     } catch (err) { rowToast(err.response?.data?.error || 'Failed'); } finally { setPsv(false); }
   }
