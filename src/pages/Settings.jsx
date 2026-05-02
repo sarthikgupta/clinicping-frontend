@@ -64,7 +64,7 @@ export default function Settings() {
     ];
     if (isAdmin) {
       loads.push(api.get('/api/settings').then(r => setClinicForm(f => ({ ...f, ...r.data }))));
-      loads.push(api.get('/api/settings/users').then(r => setUsers(r.data)));
+      loads.push(api.get('/api/auth/users').then(r => setUsers(r.data)));
     }
     Promise.all(loads).catch(console.error).finally(() => setLoading(false));
   }, [isAdmin]);
@@ -109,7 +109,7 @@ export default function Settings() {
   async function addUser(e) {
     e.preventDefault(); setSaving(true);
     try {
-      const { data } = await api.post('/api/settings/users', newUser);
+      const { data } = await api.post('/api/auth/users', newUser);
       setUsers(u => [...u, data]);
       setNewUser({ name: '', username: '', email: '', password: '', role: 'receptionist', qualification: '', registration_no: '', speciality: '' });
       setShowAddUser(false);
@@ -121,7 +121,7 @@ export default function Settings() {
 
   async function toggleActive(u) {
     try {
-      const { data } = await api.patch(`/api/settings/users/${u.id}`, { is_active: !u.is_active });
+      const { data } = await api.patch(`/api/auth/users/${u.id}`, { is_active: !u.is_active });
       setUsers(us => us.map(u2 => u2.id === data.id ? data : u2));
       showToast(data.is_active ? `${data.name} activated` : `${data.name} deactivated`);
     } catch { showToast('Failed', 'error'); }
@@ -394,7 +394,7 @@ function UserRow({ u, onSave, onToggle, showToast }) {
     if (ef.username && !/^[a-z0-9_.]{3,20}$/.test(ef.username)) { rowToast('Invalid username format'); return; }
     setSv(true);
     try {
-      const { data } = await api.patch(`/api/settings/users/${u.id}`, ef);
+      const { data } = await api.patch(`/api/auth/users/${u.id}`, ef);
       onSave(data); rowToast('Saved ✓');
     } catch (err) { rowToast(err.response?.data?.error || 'Failed'); } finally { setSv(false); }
   }
@@ -404,7 +404,7 @@ function UserRow({ u, onSave, onToggle, showToast }) {
     if (pw.length < 6) { rowToast('Min 6 characters'); return; }
     setPsv(true);
     try {
-      await api.post(`/api/settings/users/${u.id}/reset-password`, { new_password: pw });
+      await api.post(`/api/auth/users/${u.id}/reset-password`, { new_password: pw });
       setPw(''); rowToast('Password reset ✓');
     } catch (err) { rowToast(err.response?.data?.error || 'Failed'); } finally { setPsv(false); }
   }
